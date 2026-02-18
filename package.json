@@ -1,0 +1,10 @@
+{
+  "name": "dinnerparty",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recipe storage platform for chefs and home cooks",
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}
