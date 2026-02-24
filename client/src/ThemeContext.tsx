@@ -174,11 +174,11 @@ export const presets: Record<string, ColorScheme> = {
     bg: '#050505',
     text: '#00ff00',
     textMuted: '#008000',
-    accent: '#ffff00',
+    accent: '#000',
     border: '#00ff00',
     card: '#000000',
     buttonBg: '#00ff00',
-    buttonText: '#000000',
+    buttonText: '#00ff00',
   },
   slate: {
     name: 'Slate',
