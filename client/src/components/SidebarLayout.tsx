@@ -28,8 +28,9 @@ export default function SidebarLayout() {
     <div className="flex h-screen" style={{ background: theme.bg }}>
       {/* Sidebar */}
       <aside
-        className="w-56 flex flex-col shrink-0"
+        className="flex flex-col shrink-0"
         style={{
+            width: '224px',
           background: theme.sidebar,
           borderRight: `1px solid ${theme.sidebarBorder}`,
         }}
