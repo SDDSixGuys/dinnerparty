@@ -218,9 +218,9 @@ export const presets: Record<string, ColorScheme> = {
     sidebarText: '#f35588',
     sidebarHover: '#2d2936',
     sidebarActive: '#373242',
-    sidebarBorder: '#05d9e8', // Signature light blue border
+    sidebarBorder: '#05d9e8',
     bg: '#181819',
-    text: '#05d9e8', // Signature light blue text
+    text: '#05d9e8',
     textMuted: '#676767',
     accent: '#f35588',
     border: '#373242',
@@ -245,16 +245,16 @@ export const presets: Record<string, ColorScheme> = {
     buttonText: '#1a0f2e',
   },
   watermelon_punch: {
-    name: 'Watermelon Punch',
+    name: 'Watermelon',
     sidebar: '#2b3a2f',
     sidebarText: '#ff4d6d',
     sidebarHover: '#36493b',
     sidebarActive: '#415847',
     sidebarBorder: '#415847',
-    bg: '#1e2b22', // Deep forest green background
-    text: '#ff4d6d', // Bright melon pink
+    bg: '#1e2b22',
+    text: '#ff4d6d',
     textMuted: '#70a27d',
-    accent: '#39ff14', // Neon lime
+    accent: '#39ff14',
     border: '#415847',
     card: '#2b3a2f',
     buttonBg: '#ff4d6d',
@@ -277,7 +277,7 @@ export const presets: Record<string, ColorScheme> = {
     buttonText: '#00050d',
   },
   8008: {
-    name: '8008', // Based on the classic dark teal/pink keycap set
+    name: '8008',
     sidebar: '#333a45',
     sidebarText: '#f44c7f',
     sidebarHover: '#3e4652',
@@ -299,7 +299,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#485c48',
     sidebarActive: '#546d54',
     sidebarBorder: '#546d54',
-    bg: '#2e3b2e', // Earthy green background
+    bg: '#2e3b2e',
     text: '#ecf0f1',
     textMuted: '#a3b18a',
     accent: '#f9e076',
@@ -315,7 +315,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#564f66',
     sidebarActive: '#625a74',
     sidebarBorder: '#625a74',
-    bg: '#353140', // Muted deep purple-tinted background
+    bg: '#353140',
     text: '#e6e1f3',
     textMuted: '#9a94ad',
     accent: '#d0bcff',
@@ -331,7 +331,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#6e4545',
     sidebarActive: '#7f5050',
     sidebarBorder: '#7f5050',
-    bg: '#452b2b', // Warm, clay-red tinted background
+    bg: '#452b2b',
     text: '#f5e6e6',
     textMuted: '#a38181',
     accent: '#ffb4ab',
@@ -347,7 +347,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#354359',
     sidebarActive: '#3f506a',
     sidebarBorder: '#3f506a',
-    bg: '#1e2532', // Deep navy-teal background
+    bg: '#1e2532',
     text: '#d6e2ff',
     textMuted: '#8e9bb3',
     accent: '#adc6ff',
@@ -363,7 +363,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#505a39',
     sidebarActive: '#5e6943',
     sidebarBorder: '#5e6943',
-    bg: '#313723', // Earthy olive background
+    bg: '#313723',
     text: '#e3e6d8',
     textMuted: '#949a83',
     accent: '#c0ca33',
@@ -379,7 +379,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#494760',
     sidebarActive: '#555270',
     sidebarBorder: '#555270',
-    bg: '#2d2b3a', // Cool, slate-purple background
+    bg: '#2d2b3a',
     text: '#f0f0f5',
     textMuted: '#a5a2bf',
     accent: '#ffafcc',
@@ -395,7 +395,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#63554b',
     sidebarActive: '#746458',
     sidebarBorder: '#746458',
-    bg: '#3d342e', // Rich, sandy-brown background
+    bg: '#3d342e',
     text: '#f7ede2',
     textMuted: '#bda694',
     accent: '#f2cc8f',
@@ -407,17 +407,17 @@ export const presets: Record<string, ColorScheme> = {
   honey: {
     name: 'Honey',
     sidebar: '#fdb022',
-    sidebarText: '#42210b',
+    sidebarText: '#fef3c7',
     sidebarHover: '#fac515',
-    sidebarActive: '#eaaa08',
+    sidebarActive: '#7a2e0e',
     sidebarBorder: '#b54708',
-    bg: '#7a2e0e', // Deep amber background
+    bg: '#fdb022',
     text: '#fef3c7',
     textMuted: '#d97706',
     accent: '#fef3c7',
     border: '#92400e',
     card: '#92400e',
-    buttonBg: '#fef3c7',
+    buttonBg: '#fdb022',
     buttonText: '#42210b',
   },
   sweden: {
@@ -443,7 +443,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#4f392f',
     sidebarActive: '#5f4b41',
     sidebarBorder: '#5f4b41',
-    bg: '#1a120b', // Dark espresso base
+    bg: '#1a120b',
     text: '#d5cea3',
     textMuted: '#7c6d5d',
     accent: '#e5e5cb',
@@ -459,13 +459,13 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#003566',
     sidebarActive: '#001d3d',
     sidebarBorder: '#ff0000',
-    bg: '#e5e5e5', // Racing silver/grey background
+    bg: '#e5e5e5',
     text: '#001d3d',
     textMuted: '#5c6d7e',
-    accent: '#ff0000', // Racing Red
+    accent: '#ff0000',
     border: '#003566',
     card: '#ffffff',
-    buttonBg: '#ffd60a', // Bull Yellow
+    buttonBg: '#ffd60a',
     buttonText: '#001d3d',
   },
   salmon: {
@@ -475,9 +475,9 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#ff9999',
     sidebarActive: '#ff7a7a',
     sidebarBorder: '#e57373',
-    bg: '#2d1b1b', // Deep cooked salmon/dark wood background
-    text: '#ffadaa',
-    textMuted: '#a37c7c',
+    bg: '#2d1b1b',
+    text: '#ff8a8a',
+    textMuted: '#ebdae4',
     accent: '#ff8a8a',
     border: '#4a2c2c',
     card: '#3d2525',
@@ -492,10 +492,10 @@ export const presets: Record<string, ColorScheme> = {
     sidebarActive: '#9e0014',
     sidebarBorder: '#ffbc0d',
     bg: '#bd0018',
-    text: '#27251f',
+    text: '#ffbc0d',
     textMuted: '#fff',
     accent: '#ffbc0d',
-    border: '#dddddd',
+    border: '#cb4c4e',
     card: '#bd0018',
     buttonBg: '#ffbc0d',
     buttonText: '#ffffff',
@@ -523,7 +523,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#2d0000',
     sidebarActive: '#400000',
     sidebarBorder: '#ff0000',
-    bg: '#0d0000', // Near-black crimson
+    bg: '#0d0000',
     text: '#ff4d4d',
     textMuted: '#800000',
     accent: '#ff0000',
@@ -539,7 +539,7 @@ export const presets: Record<string, ColorScheme> = {
     sidebarHover: '#073642',
     sidebarActive: '#586e75',
     sidebarBorder: '#2aa198',
-    bg: '#fdf6e3', // Classic solarized light background
+    bg: '#fdf6e3',
     text: '#073642',
     textMuted: '#93a1a1',
     accent: '#cb4b16',
@@ -556,9 +556,9 @@ export const presets: Record<string, ColorScheme> = {
     sidebarActive: '#0f0f0f',
     sidebarBorder: '#1a1a1a',
     bg: '#000000',
-    text: '#444444', // Ghostly grey text
+    text: '#444444',
     textMuted: '#222222',
-    accent: '#ffffff', // Single point of light
+    accent: '#ffffff',
     border: '#111111',
     card: '#030303',
     buttonBg: '#ffffff',
