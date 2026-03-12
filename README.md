@@ -14,6 +14,32 @@ The whole thing is a monorepo managed with npm workspaces — `client/` and `ser
 
 You'll need Node.js (v18+) and a running MongoDB instance.
 
+### Running a local MongoDB Instance
+
+#### Ubuntu
+
+To **start** up mongodb
+```bash
+sudo systemctl start mongod
+```
+
+Verify that a local instance is running
+```bash
+sudo systemctl status mongod
+```
+
+To **stop** mongodb
+```bash
+sudo systemctl stop mongod
+```
+
+To **restart** mongodb
+```bash
+sudo systemctl restart mongod
+```
+
+### NodeJS and dinnerparty instance
+
 1. Clone and install:
 ```bash
 git clone <repo-url>
