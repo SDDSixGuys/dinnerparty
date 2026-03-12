@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect, createContext, useContext } from 'react';
-import { ThemeProvider } from './ThemeContext';
+import { ThemeProvider, useTheme } from './ThemeContext';
 import SidebarLayout from './components/SidebarLayout';
 
 // --- Auth Context ---
@@ -31,7 +31,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => { if (data) setUser(data.user); })
-      .catch(() => {})
+      .catch((err) => {
+          console.error("Auth check failed: ", err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,6 +55,7 @@ function HomePage() {
   const [error, setError] = useState('');
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (user) navigate('/dashboard');
@@ -88,8 +91,9 @@ function HomePage() {
 
       setUser(data.user);
       navigate('/dashboard');
-    } catch {
-      setError('Could not connect to server');
+    } catch (error) {
+        console.error("Login/Register Error: ", error);
+        setError('Could not connect to server');
     }
   };
 
@@ -229,15 +233,36 @@ function ProtectedRoute() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/*" element={<ProtectedRoute />} />
-          </Routes>
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
+  );
+}
+
+
+function AppContent() {
+  const { fontSize } = useTheme();
+
+  const fontSizeMap = {
+      smallest: 'text-[12px]',
+      small: 'text-[14px]',
+      default: 'text-[16px]',
+      large: 'text-[18px]',
+      largest: 'text-[20px]',
+  };
+
+  const currentFontSizeClass = fontSizeMap[fontSize] || fontSizeMap.default;
+
+  return (
+    <div className={`${currentFontSizeClass} min-h-screen transition-all duration-200`}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/*" element={<ProtectedRoute />} />
+      </Routes>
+    </div>
   );
 }
 
