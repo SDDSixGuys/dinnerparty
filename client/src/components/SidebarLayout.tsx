@@ -6,6 +6,7 @@ import DashboardPage from '../pages/DashboardPage';
 import RecipesPage from '../pages/RecipesPage';
 import CreateRecipePage from '../pages/CreateRecipePage';
 import SettingsPage from '../pages/SettingsPage';
+import ProfilePage from '../pages/ProfilePage';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard' },
@@ -15,6 +16,7 @@ const navItems = [
 
 export default function SidebarLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, setUser } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -105,9 +107,75 @@ export default function SidebarLayout() {
             className="px-3 py-4 mt-auto"
             style={{ borderTop: `1px solid ${theme.sidebarBorder}` }}
           >
-            <p className="text-xs px-3 mb-2" style={{ color: theme.textMuted }}>
-              {user?.username}
-            </p>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((v) => !v)}
+                className="w-full text-left px-3 py-2 rounded transition-all duration-200 cursor-pointer"
+                style={{ color: theme.sidebarText }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                aria-haspopup="menu"
+                aria-expanded={isUserMenuOpen}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium truncate">{user?.username}</div>
+                    <div className="text-[11px] truncate" style={{ color: theme.textMuted }}>
+                      {user?.email}
+                    </div>
+                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`shrink-0 transition-transform duration-200 ${
+                      isUserMenuOpen ? 'rotate-180' : 'rotate-0'
+                    }`}
+                    style={{ color: theme.textMuted }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </button>
+
+              {isUserMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute bottom-full left-0 right-0 mb-2 rounded-lg shadow-lg overflow-hidden"
+                  style={{ background: theme.sidebar, border: `1px solid ${theme.sidebarBorder}` }}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/profile');
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm transition-all duration-200 cursor-pointer"
+                    style={{ color: theme.sidebarText }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = theme.sidebarHover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    Profile information
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               onClick={handleLogout}
               className="w-full text-left px-3 py-1.5 rounded text-sm transition-all duration-200 cursor-pointer"
@@ -134,6 +202,7 @@ export default function SidebarLayout() {
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/new" element={<CreateRecipePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
     </div>
