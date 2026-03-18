@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import authRoutes from './routes/auth.routes';
+import recipeRoutes from './routes/recipes.routes';
 
 const app = express();
 
@@ -22,7 +23,7 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/recipes', recipeRoutes);
+app.use('/api/recipes', recipeRoutes);
 // app.use('/api/folders', folderRoutes);
 // app.use('/api/tags', tagRoutes);
 // app.use('/api/schedule', scheduleRoutes);
