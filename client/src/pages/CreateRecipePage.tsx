@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
+import { createRecipe } from '../api/recipes';
 
 interface Ingredient {
   name: string;
@@ -35,8 +36,10 @@ export default function CreateRecipePage() {
     { text: '', photo: null, photoPreview: '' },
   ]);
 
-  const [finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
+  const [_finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
   const [finishedPhotoPreview, setFinishedPhotoPreview] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   // --- Ingredient helpers ---
 
@@ -99,14 +102,45 @@ export default function CreateRecipePage() {
 
   // --- Submit ---
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: send to backend
-    console.log({
-      title, description, prepTime, cookTime, servings,
-      difficulty, cuisine, course, ingredients, steps, finishedPhoto,
-    });
-    navigate('/recipes');
+    setError('');
+    setSaving(true);
+
+    try {
+      const payload = {
+        title,
+        description: description || undefined,
+        prepTimeMinutes: prepTime ? Number(prepTime) : 0,
+        cookTimeMinutes: cookTime ? Number(cookTime) : 0,
+        totalTimeMinutes: (prepTime ? Number(prepTime) : 0) + (cookTime ? Number(cookTime) : 0),
+        servings: servings ? Number(servings) : 4,
+        difficulty,
+        cuisine: cuisine || undefined,
+        course: course || undefined,
+        ingredients: ingredients
+          .filter((i) => i.name.trim())
+          .map((i) => ({
+            name: i.name.trim(),
+            quantity: i.quantity ? Number(i.quantity) : undefined,
+            unit: i.unit?.trim() || undefined,
+          })),
+        instructions: steps
+          .filter((s) => s.text.trim())
+          .map((s, idx) => ({
+            stepNumber: idx + 1,
+            text: s.text.trim(),
+          })),
+        // Photos are still UI-only for now (backend expects imageUrl strings, not file uploads)
+      };
+
+      const { recipe } = await createRecipe(payload);
+      navigate(`/recipes/${recipe._id}`);
+    } catch (err: any) {
+      setError(err?.message || 'Could not save recipe');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // --- Shared styles ---
@@ -438,10 +472,11 @@ export default function CreateRecipePage() {
         <div className="flex gap-3 pt-2 pb-8">
           <button
             type="submit"
-            className="px-5 py-2 rounded text-sm font-medium cursor-pointer transition-colors"
+            disabled={saving}
+            className="px-5 py-2 rounded text-sm font-medium cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ background: theme.buttonBg, color: theme.buttonText }}
           >
-            Save Recipe
+            {saving ? 'Saving…' : 'Save Recipe'}
           </button>
           <button
             type="button"
@@ -454,6 +489,12 @@ export default function CreateRecipePage() {
             Cancel
           </button>
         </div>
+
+        {error && (
+          <p className="text-sm" style={{ color: '#ef4444' }}>
+            {error}
+          </p>
+        )}
       </form>
     </div>
   );

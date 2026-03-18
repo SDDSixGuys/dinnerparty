@@ -5,6 +5,7 @@ import { useTheme } from '../ThemeContext';
 import DashboardPage from '../pages/DashboardPage';
 import RecipesPage from '../pages/RecipesPage';
 import CreateRecipePage from '../pages/CreateRecipePage';
+import RecipeDetailPage from '../pages/RecipeDetailPage';
 import SettingsPage from '../pages/SettingsPage';
 import ProfilePage from '../pages/ProfilePage';
 
@@ -201,6 +202,7 @@ export default function SidebarLayout() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/new" element={<CreateRecipePage />} />
+          <Route path="/recipes/:id" element={<RecipeDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>

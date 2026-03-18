@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
+import { listRecipes, type RecipeListItem } from '../api/recipes';
 
 export default function RecipesPage() {
   const { theme } = useTheme();
@@ -8,6 +9,33 @@ export default function RecipesPage() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importUrl, setImportUrl] = useState('');
+  const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+
+    listRecipes()
+      .then((data) => {
+        if (cancelled) return;
+        setRecipes(data.recipes || []);
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setError(err?.message || 'Could not load recipes');
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="p-8">
@@ -130,10 +158,46 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {/* Empty State */}
-      <p className="text-sm" style={{ color: theme.textMuted }}>
-        No recipes yet. Click + to add your first one.
-      </p>
+      {loading ? (
+        <p className="text-sm" style={{ color: theme.textMuted }}>
+          Loading recipes…
+        </p>
+      ) : error ? (
+        <p className="text-sm" style={{ color: '#ef4444' }}>
+          {error}
+        </p>
+      ) : recipes.length === 0 ? (
+        <p className="text-sm" style={{ color: theme.textMuted }}>
+          No recipes yet. Click + to add your first one.
+        </p>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+          {recipes.map((r) => (
+            <button
+              key={r._id}
+              onClick={() => navigate(`/recipes/${r._id}`)}
+              className="text-left rounded-lg p-4 transition-colors cursor-pointer"
+              style={{ background: theme.card, border: `1px solid ${theme.border}` }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = theme.accent;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = theme.border;
+              }}
+            >
+              <div className="text-sm font-medium mb-1" style={{ color: theme.text }}>
+                {r.title}
+              </div>
+              <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
+                {r.description || '—'}
+              </div>
+              <div className="mt-3 text-[11px]" style={{ color: theme.textMuted }}>
+                Updated {new Date(r.updatedAt).toLocaleDateString()}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
