@@ -3,8 +3,6 @@ import { Recipe } from '../models';
 import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
-
-// All recipe routes require authentication
 router.use(requireAuth);
 
 
@@ -34,9 +32,22 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-/* 
-  @route POST /api/recipes - Remember this call cause we need it to create a new recipe
-*/
+
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const { userId: _ignoredUserId, ...body } = req.body ?? {};
+
+    const recipe = new Recipe({ ...body, userId });
+    await recipe.save();
+
+    res.status(201).json({ recipe });
+  } catch (error: any) {
+    console.error('Create recipe error:', error);
+    res.status(400).json({ error: error?.message ?? 'Invalid recipe payload' });
+  }
+});
 
 // GET /api/recipes/:id
 router.get('/:id', async (req: Request, res: Response) => {
