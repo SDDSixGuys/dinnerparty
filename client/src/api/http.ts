@@ -12,10 +12,23 @@ export async function apiJson<T>(
   });
 
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  if (!text) {
+    return {} as T;
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    const preview = text.slice(0, 200).replace(/\s+/g, ' ');
+    throw new Error(`Expected JSON but got: ${preview}`);
+  }
 
   if (!res.ok) {
-    const message = data?.error || `Request failed (${res.status})`;
+    const message =
+      (data as any)?.error ||
+      (data as any)?.message ||
+      `Request failed (${res.status})`;
     throw new Error(message);
   }
 
