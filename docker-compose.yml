@@ -13,7 +13,7 @@ services:
       dockerfile: server/Dockerfile
     container_name: dinnerparty-server
     ports:
-      - "5000:5000"
+      - "8080:8080"
     volumes:
       - .:/app
       - /app/node_modules
