@@ -8,6 +8,7 @@ import CreateRecipePage from '../pages/CreateRecipePage';
 import RecipeDetailPage from '../pages/RecipeDetailPage';
 import SettingsPage from '../pages/SettingsPage';
 import ProfilePage from '../pages/ProfilePage';
+import EditRecipePage from '../pages/EditRecipePage';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard' },
@@ -203,6 +204,7 @@ export default function SidebarLayout() {
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/new" element={<CreateRecipePage />} />
           <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+          <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>

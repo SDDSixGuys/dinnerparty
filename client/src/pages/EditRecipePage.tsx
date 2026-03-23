@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
-import { createRecipe } from '../api/recipes';
+import { getRecipe, updateRecipe } from '../api/recipes';
 
 interface Ingredient {
   name: string;
@@ -17,9 +17,10 @@ interface Step {
   showTimer: boolean;
 }
 
-export default function CreateRecipePage() {
+export default function EditRecipePage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -29,71 +30,100 @@ export default function CreateRecipePage() {
   const [difficulty, setDifficulty] = useState('medium');
   const [cuisine, setCuisine] = useState('');
   const [course, setCourse] = useState('');
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [steps, setSteps] = useState<Step[]>([]);
 
-  const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { name: '', quantity: '', unit: '' },
-  ]);
-
-  const [steps, setSteps] = useState<Step[]>([
-    { text: '', photo: null, photoPreview: '', timerMinutes: '', showTimer: false },
-  ]);
-
-  const [_finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
-  const [finishedPhotoPreview, setFinishedPhotoPreview] = useState('');
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const addIngredient = () => {
-    setIngredients([...ingredients, { name: '', quantity: '', unit: '' }]);
-  };
+  useEffect(() => {
+    if (!id) return;
+    getRecipe(id)
+      .then((data) => {
+        const r = data.recipe;
+        setTitle(r.title);
+        setDescription(r.description || '');
+        setPrepTime(r.prepTimeMinutes?.toString() || '');
+        setCookTime(r.cookTimeMinutes?.toString() || '');
+        setServings(r.servings?.toString() || '4');
+        setDifficulty(r.difficulty || 'medium');
+        setCuisine(r.cuisine || '');
+        setCourse(r.course || '');
+        setIngredients(
+          r.ingredients.length > 0
+            ? r.ingredients.map((i: any) => ({
+                name: i.name,
+                quantity: i.quantity?.toString() || '',
+                unit: i.unit || '',
+              }))
+            : [{ name: '', quantity: '', unit: '' }]
+        );
+        setSteps(
+          r.instructions.length > 0
+            ? r.instructions.map((s: any) => ({
+                text: s.text,
+                photo: null,
+                photoPreview: s.imageUrl || '',
+                timerMinutes: s.timerMinutes?.toString() || '',
+                showTimer: !!s.timerMinutes,
+              }))
+            : [{ text: '', photo: null, photoPreview: '', timerMinutes: '', showTimer: false }]
+        );
+        setLoading(false);
+      })
+      .catch(() => {
+          console.error('FETCH ERROR:', err);
+        setError('Failed to load recipe');
+        setLoading(false);
+      });
+  }, [id]);
 
+  // --- Ingredient helpers ---
+  const addIngredient = () => setIngredients([...ingredients, { name: '', quantity: '', unit: '' }]);
   const removeIngredient = (index: number) => {
     if (ingredients.length === 1) return;
     setIngredients(ingredients.filter((_, i) => i !== index));
   };
-
   const updateIngredient = (index: number, field: keyof Ingredient, value: string) => {
     const updated = [...ingredients];
     updated[index] = { ...updated[index], [field]: value };
     setIngredients(updated);
   };
 
-  const addStep = () => {
-    setSteps([...steps, { text: '', photo: null, photoPreview: '', timerMinutes: '', showTimer: false }]);
-  };
-
+  // --- Step helpers ---
+  const addStep = () => setSteps([...steps, { text: '', photo: null, photoPreview: '', timerMinutes: '', showTimer: false }]);
   const removeStep = (index: number) => {
     if (steps.length === 1) return;
     const removed = steps[index];
-    if (removed.photoPreview) URL.revokeObjectURL(removed.photoPreview);
+    if (removed.photoPreview && !removed.photoPreview.startsWith('http')) {
+      URL.revokeObjectURL(removed.photoPreview);
+    }
     setSteps(steps.filter((_, i) => i !== index));
   };
-
   const updateStepText = (index: number, text: string) => {
     const updated = [...steps];
     updated[index] = { ...updated[index], text };
     setSteps(updated);
   };
-
   const toggleStepTimer = (index: number) => {
     const updated = [...steps];
     updated[index] = {
       ...updated[index],
       showTimer: !updated[index].showTimer,
-      timerMinutes: updated[index].showTimer ? '' : updated[index].timerMinutes
+      timerMinutes: updated[index].showTimer ? '' : updated[index].timerMinutes,
     };
     setSteps(updated);
   };
-
   const updateStepTimer = (index: number, value: string) => {
     const updated = [...steps];
     updated[index] = { ...updated[index], timerMinutes: value };
     setSteps(updated);
   };
-
   const updateStepPhoto = (index: number, file: File | null) => {
     const updated = [...steps];
-    if (updated[index].photoPreview) URL.revokeObjectURL(updated[index].photoPreview);
+    const prev = updated[index].photoPreview;
+    if (prev && !prev.startsWith('http')) URL.revokeObjectURL(prev);
     updated[index] = {
       ...updated[index],
       photo: file,
@@ -102,17 +132,10 @@ export default function CreateRecipePage() {
     setSteps(updated);
   };
 
-  const handleFinishedPhoto = (file: File | null) => {
-    if (finishedPhotoPreview) URL.revokeObjectURL(finishedPhotoPreview);
-    setFinishedPhoto(file);
-    setFinishedPhotoPreview(file ? URL.createObjectURL(file) : '');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSaving(true);
-
     try {
       const payload = {
         title,
@@ -139,33 +162,27 @@ export default function CreateRecipePage() {
             timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
           })),
       };
-
-      const { recipe } = await createRecipe(payload);
-      navigate(`/recipes/${recipe._id}`);
+      await updateRecipe(id!, payload);
+      navigate(`/recipes/${id}`);
     } catch (err: any) {
-      setError(err?.message || 'Could not save recipe');
+      setError(err?.message || 'Update failed');
     } finally {
       setSaving(false);
     }
   };
 
-  const inputStyle = {
-    background: theme.bg,
-    color: theme.text,
-    border: `1px solid ${theme.border}`,
-  };
+  const inputStyle = { background: theme.bg, color: theme.text, border: `1px solid ${theme.border}` };
+  const labelClass = 'block text-xs font-medium mb-1';
 
-  const labelClass = "block text-xs font-medium mb-1";
+  if (loading) return <div className="p-8" style={{ color: theme.textMuted }}>Loading recipe...</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <button
-        onClick={() => navigate('/recipes')}
-        className="text-sm mb-6 cursor-pointer"
-        style={{ color: theme.textMuted }}
-      >
-        &larr; Back to Recipes
+      <button onClick={() => navigate(-1)} className="text-sm mb-6 cursor-pointer" style={{ color: theme.textMuted }}>
+        &larr; Back
       </button>
+
+      <h1 className="text-2xl font-bold mb-8" style={{ color: theme.text }}>Edit Recipe</h1>
 
       <form onSubmit={handleSubmit} className="space-y-12 pb-20">
         {/* --- Header Section --- */}
@@ -230,9 +247,9 @@ export default function CreateRecipePage() {
               </div>
             ))}
           </div>
-          <button type="button" onClick={addIngredient}
-          className="mt-4 text-xs font-medium px-4 py-2 rounded border cursor-pointer hover:opacity-80 transition-opacity"
-          style={{ color: theme.text, borderColor: theme.border, background: theme.card }}>+ Add Ingredient</button>
+          <button type="button" onClick={addIngredient} className="mt-4 text-xs font-medium px-4 py-2 rounded border cursor-pointer hover:opacity-80 transition-opacity" style={{ color: theme.text, borderColor: theme.border, background: theme.card }}>
+            + Add Ingredient
+          </button>
         </section>
 
         {/* --- Steps --- */}
@@ -264,7 +281,7 @@ export default function CreateRecipePage() {
                   )}
 
                   <label className="text-xs px-3 py-1.5 rounded border cursor-pointer inline-block" style={{ color: theme.textMuted, borderColor: theme.border }}>
-                    {step.photo ? 'Change Photo' : '+ Add Photo'}
+                    {step.photo ? 'Change Photo' : step.photoPreview ? 'Change Photo' : '+ Add Photo'}
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => updateStepPhoto(i, e.target.files?.[0] || null)} />
                   </label>
                 </div>
@@ -278,38 +295,17 @@ export default function CreateRecipePage() {
               </div>
             ))}
           </div>
-          <button
-              type="button"
-              onClick={addStep}
-              className="mt-6 text-xs font-medium px-4 py-2 rounded border cursor-pointer hover:opacity-80 transition-opacity"
-              style={{ color: theme.text, borderColor: theme.border, background: theme.card }}
-          >
-              + Add Step
+          <button type="button" onClick={addStep} className="mt-6 text-xs font-medium px-4 py-2 rounded border cursor-pointer hover:opacity-80 transition-opacity" style={{ color: theme.text, borderColor: theme.border, background: theme.card }}>
+            + Add Step
           </button>
-        </section>
-
-        {/* --- Finished Photo --- */}
-        <section>
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: theme.text }}>Finished Dish Photo</h2>
-          {finishedPhotoPreview ? (
-            <div className="relative inline-block">
-              <img src={finishedPhotoPreview} className="h-48 w-full object-cover rounded-xl border" style={{ borderColor: theme.border }} alt="" />
-              <button type="button" onClick={() => handleFinishedPhoto(null)} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
-            </div>
-          ) : (
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer" style={{ borderColor: theme.border }}>
-              <span className="text-xs" style={{ color: theme.textMuted }}>Upload finished dish photo</span>
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFinishedPhoto(e.target.files?.[0] || null)} />
-            </label>
-          )}
         </section>
 
         {/* --- Footer Controls --- */}
         <div className="flex items-center gap-4 pt-6 border-t" style={{ borderColor: theme.border }}>
           <button type="submit" disabled={saving} className="px-10 py-3 rounded-lg text-sm font-bold cursor-pointer disabled:opacity-50" style={{ background: theme.buttonBg, color: theme.buttonText }}>
-            {saving ? 'Saving...' : 'Save Recipe'}
+            {saving ? 'Saving...' : 'Update Recipe'}
           </button>
-          <button type="button" onClick={() => navigate('/recipes')} className="px-10 py-3 rounded-lg text-sm font-medium border" style={{ color: theme.text, borderColor: theme.border }}>Cancel</button>
+          <button type="button" onClick={() => navigate(-1)} className="px-10 py-3 rounded-lg text-sm font-medium border" style={{ color: theme.text, borderColor: theme.border }}>Cancel</button>
           {error && <p className="text-sm font-medium" style={{ color: '#ef4444' }}>{error}</p>}
         </div>
       </form>
