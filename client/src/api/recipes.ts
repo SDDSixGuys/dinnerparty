@@ -61,3 +61,13 @@ export async function createRecipe(payload: any) {
   });
 }
 
+export const updateRecipe = (id: string, data: any) =>
+  fetch(`/api/recipes/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(res => res.json());
+
+export const deleteRecipe = (id: string) =>
+  fetch(`/api/recipes/${id}`, { method: 'DELETE' }).then(res => res.json());
+
