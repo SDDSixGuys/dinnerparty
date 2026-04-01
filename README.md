@@ -11,33 +11,40 @@ A recipe storage and meal planning app. Built for people who actually cook and w
 The whole thing is a monorepo managed with npm workspaces — `client/` and `server/` are the two packages.
 
 ## Getting started
+
 ### Docker (Recommended)
+
 1. Download Docker / Docker Desktop. Different operating systems will have different requirements. If unsure, look at the official [getting started guide](https://www.docker.com/get-started/).
 
-
 2. Set up your environment variables. Copy the example and fill in your values:
-    ```bash
-    cp .env.example server/.env
-    ```
 
-    - Most of the defaults in `.env.example` should work, but you'll want to change `JWT_SECRET` to something real.
-    - You'll also want to change Mongo_URI to:
+   ```bash
+   cp .env.example server/.env
+   ```
 
-    ```MONGO_URI=mongodb://mongodb:27017/dinnerparty```
+   - Most of the defaults in `.env.example` should work, but you'll want to change `JWT_SECRET` to something real.
+   - You'll also want to change Mongo_URI to:
+
+   `MONGO_URI=mongodb://mongodb:27017/dinnerparty`
 
 3. Open a terminal and navigate to the repository.
 
 4. Run:
+
 ```
 docker-compose build
 ```
+
 This may take a few minutes.
 
 5. Once the image is built, run it:
+
 ```
 docker-compose up
 ```
+
 6. You can access the front-end at:
+
 ```
 http://localhost:5173/
 ```
@@ -47,6 +54,7 @@ http://localhost:5173/
 You'll need Node.js (v18+) and a running MongoDB instance.
 
 1. Clone and install:
+
 ```bash
 git clone <repo-url>
 cd dinnerparty
@@ -54,6 +62,7 @@ npm install
 ```
 
 2. Set up your environment variables. Copy the example and fill in your values:
+
 ```bash
 cp .env.example server/.env
 ```
@@ -61,6 +70,7 @@ cp .env.example server/.env
 The defaults in `.env.example` should work for local development, but you'll want to change `JWT_SECRET` to something real.
 
 3. Start the dev servers:
+
 ```bash
 # API server (runs on :5000)
 npm run dev -w server
