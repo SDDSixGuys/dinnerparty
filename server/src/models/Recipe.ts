@@ -17,6 +17,7 @@ const instructionStepSchema = new Schema(
     stepName: { type: String, trim: true },
     text: { type: String, required: true },
     timerMinutes: { type: Number },
+    imageUrl: { type: String, default: '' },
     group: { type: String, trim: true },
   },
   { _id: false }
@@ -167,6 +168,7 @@ export interface IRecipe extends Document {
     stepName?: string;
     text: string;
     timerMinutes?: number;
+    imageUrl?: string;
     group?: string;
   }>;
   prepTimeMinutes: number;

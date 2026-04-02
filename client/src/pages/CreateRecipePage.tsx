@@ -38,8 +38,8 @@ export default function CreateRecipePage() {
     { text: "", photo: null, photoPreview: "", timerMinutes: "", showTimer: false },
   ]);
 
-  const [_finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
-  const [finishedPhotoPreview, setFinishedPhotoPreview] = useState("");
+  const [finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
+  const [finishedPhotoPreview, setFinishedPhotoPreview] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -111,15 +111,42 @@ export default function CreateRecipePage() {
     setFinishedPhotoPreview(file ? URL.createObjectURL(file) : "");
   };
 
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSaving(true);
 
     try {
+      // Convert finished dish photo to base64
+      let imageUrl = '';
+      if (finishedPhoto) {
+        imageUrl = await fileToBase64(finishedPhoto);
+      }
+
+      // Convert step photos to base64
+      const instructionsWithPhotos = await Promise.all(
+        steps
+          .filter((s) => s.text.trim())
+          .map(async (s, idx) => ({
+            stepNumber: idx + 1,
+            text: s.text.trim(),
+            timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
+            imageUrl: s.photo ? await fileToBase64(s.photo) : undefined,
+          }))
+      );
+
       const payload = {
         title,
         description: description || undefined,
+        imageUrl: imageUrl || undefined,
         prepTimeMinutes: prepTime ? Number(prepTime) : 0,
         cookTimeMinutes: cookTime ? Number(cookTime) : 0,
         totalTimeMinutes: (prepTime ? Number(prepTime) : 0) + (cookTime ? Number(cookTime) : 0),
@@ -134,13 +161,7 @@ export default function CreateRecipePage() {
             quantity: i.quantity ? Number(i.quantity) : undefined,
             unit: i.unit?.trim() || undefined,
           })),
-        instructions: steps
-          .filter((s) => s.text.trim())
-          .map((s, idx) => ({
-            stepNumber: idx + 1,
-            text: s.text.trim(),
-            timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
-          })),
+        instructions: instructionsWithPhotos,
       };
 
       const { recipe } = await createRecipe(payload);

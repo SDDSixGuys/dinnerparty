@@ -23,6 +23,7 @@ export interface RecipeDetail extends RecipeListItem {
     stepName?: string;
     text: string;
     timerMinutes?: number;
+    imageUrl?: string;
     group?: string;
   }>;
   servings?: number;
