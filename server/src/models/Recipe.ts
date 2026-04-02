@@ -14,6 +14,7 @@ const ingredientSchema = new Schema(
 const instructionStepSchema = new Schema(
   {
     stepNumber: { type: Number, required: true },
+    stepName: { type: String, trim: true },
     text: { type: String, required: true },
     timerMinutes: { type: Number },
     group: { type: String, trim: true },
@@ -163,6 +164,7 @@ export interface IRecipe extends Document {
   }>;
   instructions: Array<{
     stepNumber: number;
+    stepName?: string;
     text: string;
     timerMinutes?: number;
     group?: string;

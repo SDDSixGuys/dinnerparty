@@ -20,6 +20,7 @@ export interface RecipeDetail extends RecipeListItem {
   }>;
   instructions: Array<{
     stepNumber: number;
+    stepName?: string;
     text: string;
     timerMinutes?: number;
     group?: string;
@@ -57,6 +58,13 @@ export async function getRecipe(id: string) {
 export async function createRecipe(payload: any) {
   return apiJson<{ recipe: RecipeDetail }>(`/api/recipes`, {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function importRecipe(payload: any) {
+  return apiJson<{ recipe: RecipeDetail }>(`/api/recipes/import`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 }

@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "../ThemeContext";
-import { listRecipes, type RecipeListItem } from "../api/recipes";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../ThemeContext';
+import { importRecipe, listRecipes, type RecipeListItem } from '../api/recipes';
 
 export default function RecipesPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [importUrl, setImportUrl] = useState("");
+  const [importUrl, setImportUrl] = useState('');
+  const [importingUrl, setImportingUrl] = useState(false);
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,6 +37,49 @@ export default function RecipesPage() {
       cancelled = true;
     };
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setImportingUrl(true);
+
+    try {
+      // const payload = {
+      //   title,
+      //   description: description || undefined,
+      //   prepTimeMinutes: prepTime ? Number(prepTime) : 0,
+      //   cookTimeMinutes: cookTime ? Number(cookTime) : 0,
+      //   totalTimeMinutes: (prepTime ? Number(prepTime) : 0) + (cookTime ? Number(cookTime) : 0),
+      //   servings: servings ? Number(servings) : 4,
+      //   difficulty,
+      //   cuisine: cuisine || undefined,
+      //   course: course || undefined,
+      //   ingredients: ingredients
+      //     .filter((i) => i.name.trim())
+      //     .map((i) => ({
+      //       name: i.name.trim(),
+      //       quantity: i.quantity ? Number(i.quantity) : undefined,
+      //       unit: i.unit?.trim() || undefined,
+      //     })),
+      //   instructions: steps
+      //     .filter((s) => s.text.trim())
+      //     .map((s, idx) => ({
+      //       stepNumber: idx + 1,
+      //       text: s.text.trim(),
+      //       timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
+      //     })),
+      // };
+
+      const { recipe } = await importRecipe({ url: importUrl });
+      setShowImport(false);
+      setImportUrl('');
+      navigate(`/recipes/${recipe._id}`);
+    } catch (err: any) {
+      setError(err?.message || 'Could not import recipe');
+    } finally {
+      setImportingUrl(false);
+    }
+  };
 
   return (
     <div className="p-8">
@@ -131,7 +175,7 @@ export default function RecipesPage() {
                 border: `1px solid ${theme.border}`,
               }}
             />
-            <div className="flex justify-end gap-2">
+            <form onSubmit={handleSubmit} className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowImport(false);
@@ -149,20 +193,22 @@ export default function RecipesPage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // TODO: send importUrl to backend parser
-                  setShowImport(false);
-                  setImportUrl("");
-                }}
+                // onClick={() => {
+                //   // TODO: send importUrl to backend parser
+                //   setShowImport(false);
+                //   setImportUrl('');
+                // }}
+                type='submit'
+                disabled={importingUrl}
                 className="px-4 py-1.5 rounded text-sm cursor-pointer transition-colors"
                 style={{
                   background: theme.buttonBg,
                   color: theme.buttonText,
                 }}
               >
-                Import
+                {importingUrl ? 'Importing...' : 'Import'}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
