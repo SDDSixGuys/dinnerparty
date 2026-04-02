@@ -50,6 +50,7 @@ export default function EditRecipePage() {
         setDifficulty(r.difficulty || 'medium');
         setCuisine(r.cuisine || '');
         setCourse(r.course || '');
+        setFinishedPhotoPreview(r.imageUrl || '');
         setIngredients(
           r.ingredients.length > 0
             ? r.ingredients.map((i: any) => ({
@@ -72,7 +73,7 @@ export default function EditRecipePage() {
         );
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
           console.error('FETCH ERROR:', err);
         setError('Failed to load recipe');
         setLoading(false);
@@ -132,14 +133,59 @@ export default function EditRecipePage() {
     setSteps(updated);
   };
 
+  const [finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
+  const [finishedPhotoPreview, setFinishedPhotoPreview] = useState('');
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleFinishedPhoto = (file: File | null) => {
+    if (finishedPhotoPreview && !finishedPhotoPreview.startsWith('data:')) URL.revokeObjectURL(finishedPhotoPreview);
+    setFinishedPhoto(file);
+    setFinishedPhotoPreview(file ? URL.createObjectURL(file) : '');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSaving(true);
     try {
+      // Convert finished dish photo to base64
+      let imageUrl = finishedPhotoPreview; // keep existing if it's already a data URL
+      if (finishedPhoto) {
+        imageUrl = await fileToBase64(finishedPhoto);
+      }
+
+      // Convert step photos to base64
+      const instructionsWithPhotos = await Promise.all(
+        steps
+          .filter((s) => s.text.trim())
+          .map(async (s, idx) => {
+            let stepImageUrl: string | undefined;
+            if (s.photo) {
+              stepImageUrl = await fileToBase64(s.photo);
+            } else if (s.photoPreview) {
+              // Keep existing base64/URL from server
+              stepImageUrl = s.photoPreview;
+            }
+            return {
+              stepNumber: idx + 1,
+              text: s.text.trim(),
+              timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
+              imageUrl: stepImageUrl || undefined,
+            };
+          })
+      );
+
       const payload = {
         title,
         description: description || undefined,
+        imageUrl: imageUrl || '',
         prepTimeMinutes: prepTime ? Number(prepTime) : 0,
         cookTimeMinutes: cookTime ? Number(cookTime) : 0,
         totalTimeMinutes: (prepTime ? Number(prepTime) : 0) + (cookTime ? Number(cookTime) : 0),
@@ -154,13 +200,7 @@ export default function EditRecipePage() {
             quantity: i.quantity ? Number(i.quantity) : undefined,
             unit: i.unit?.trim() || undefined,
           })),
-        instructions: steps
-          .filter((s) => s.text.trim())
-          .map((s, idx) => ({
-            stepNumber: idx + 1,
-            text: s.text.trim(),
-            timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
-          })),
+        instructions: instructionsWithPhotos,
       };
       await updateRecipe(id!, payload);
       navigate(`/recipes/${id}`);
@@ -298,6 +338,22 @@ export default function EditRecipePage() {
           <button type="button" onClick={addStep} className="mt-6 text-xs font-medium px-4 py-2 rounded border cursor-pointer hover:opacity-80 transition-opacity" style={{ color: theme.text, borderColor: theme.border, background: theme.card }}>
             + Add Step
           </button>
+        </section>
+
+        {/* --- Finished Photo --- */}
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: theme.text }}>Finished Dish Photo</h2>
+          {finishedPhotoPreview ? (
+            <div className="relative inline-block">
+              <img src={finishedPhotoPreview} className="h-48 w-full object-cover rounded-xl border" style={{ borderColor: theme.border }} alt="" />
+              <button type="button" onClick={() => { handleFinishedPhoto(null); setFinishedPhotoPreview(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer" style={{ borderColor: theme.border }}>
+              <span className="text-xs" style={{ color: theme.textMuted }}>Upload finished dish photo</span>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFinishedPhoto(e.target.files?.[0] || null)} />
+            </label>
+          )}
         </section>
 
         {/* --- Footer Controls --- */}
