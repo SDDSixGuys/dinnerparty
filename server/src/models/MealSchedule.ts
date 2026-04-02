@@ -1,15 +1,15 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 const scheduledMealSchema = new Schema(
   {
     recipeId: {
       type: Schema.Types.ObjectId,
-      ref: 'Recipe',
+      ref: "Recipe",
       required: true,
     },
     mealType: {
       type: String,
-      enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+      enum: ["breakfast", "lunch", "dinner", "snack"],
       required: true,
     },
     servings: { type: Number, default: 1 },
@@ -24,7 +24,7 @@ const mealScheduleSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
@@ -44,7 +44,7 @@ mealScheduleSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 export interface IScheduledMeal {
   recipeId: mongoose.Types.ObjectId;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType: "breakfast" | "lunch" | "dinner" | "snack";
   servings: number;
   notes?: string;
   equipment: string[];
@@ -58,4 +58,4 @@ export interface IMealSchedule extends Document {
   updatedAt: Date;
 }
 
-export default mongoose.model<IMealSchedule>('MealSchedule', mealScheduleSchema);
+export default mongoose.model<IMealSchedule>("MealSchedule", mealScheduleSchema);

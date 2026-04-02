@@ -1,14 +1,11 @@
-export async function apiJson<T>(
-  input: RequestInfo | URL,
-  init: RequestInit = {}
-): Promise<T> {
+export async function apiJson<T>(input: RequestInfo | URL, init: RequestInit = {}): Promise<T> {
   const res = await fetch(input, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(init.headers || {}),
     },
-    credentials: 'include',
+    credentials: "include",
   });
 
   const text = await res.text();
@@ -20,18 +17,15 @@ export async function apiJson<T>(
   try {
     data = JSON.parse(text);
   } catch {
-    const preview = text.slice(0, 200).replace(/\s+/g, ' ');
+    const preview = text.slice(0, 200).replace(/\s+/g, " ");
     throw new Error(`Expected JSON but got: ${preview}`);
   }
 
   if (!res.ok) {
     const message =
-      (data as any)?.error ||
-      (data as any)?.message ||
-      `Request failed (${res.status})`;
+      (data as any)?.error || (data as any)?.message || `Request failed (${res.status})`;
     throw new Error(message);
   }
 
   return data as T;
 }
-

@@ -1,18 +1,18 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcryptjs';
+import mongoose, { Schema, Document } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcryptjs";
 
 const themePreferencesSchema = new Schema(
   {
     mode: {
       type: String,
-      enum: ['light', 'dark', 'custom'],
-      default: 'light',
+      enum: ["light", "dark", "custom"],
+      default: "light",
     },
-    primaryColor: { type: String, default: '#4A90D9' },
-    accentColor: { type: String, default: '#F5A623' },
-    backgroundColor: { type: String, default: '#FFFFFF' },
-    fontFamily: { type: String, default: 'Inter' },
+    primaryColor: { type: String, default: "#4A90D9" },
+    accentColor: { type: String, default: "#F5A623" },
+    backgroundColor: { type: String, default: "#FFFFFF" },
+    fontFamily: { type: String, default: "Inter" },
   },
   { _id: false }
 );
@@ -51,7 +51,7 @@ const userSchema = new Schema(
       trim: true,
       maxlength: 50,
     },
-    avatarUrl: { type: String, default: '' },
+    avatarUrl: { type: String, default: "" },
 
     // Account state
     isVerified: { type: Boolean, default: false },
@@ -64,14 +64,14 @@ const userSchema = new Schema(
     defaultServings: { type: Number, default: 4 },
     measurementSystem: {
       type: String,
-      enum: ['metric', 'imperial'],
-      default: 'imperial',
+      enum: ["metric", "imperial"],
+      default: "imperial",
     },
 
     // Root folder created on registration
     rootFolderId: {
       type: Schema.Types.ObjectId,
-      ref: 'Folder',
+      ref: "Folder",
     },
   },
   {
@@ -80,16 +80,14 @@ const userSchema = new Schema(
 );
 
 // Hash password before saving
-userSchema.pre('save', async function () {
-  if (!this.isModified('passwordHash')) return;
+userSchema.pre("save", async function () {
+  if (!this.isModified("passwordHash")) return;
   const salt = await bcrypt.genSalt(12);
   this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
@@ -105,18 +103,18 @@ export interface IUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   theme: {
-    mode: 'light' | 'dark' | 'custom';
+    mode: "light" | "dark" | "custom";
     primaryColor: string;
     accentColor: string;
     backgroundColor: string;
     fontFamily: string;
   };
   defaultServings: number;
-  measurementSystem: 'metric' | 'imperial';
+  measurementSystem: "metric" | "imperial";
   rootFolderId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-export default mongoose.model<IUser>('User', userSchema);
+export default mongoose.model<IUser>("User", userSchema);
