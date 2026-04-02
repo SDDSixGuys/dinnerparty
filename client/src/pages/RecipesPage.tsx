@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
-import { listRecipes, type RecipeListItem } from '../api/recipes';
+import { importRecipe, listRecipes, type RecipeListItem } from '../api/recipes';
 
 export default function RecipesPage() {
   const { theme } = useTheme();
@@ -9,14 +9,15 @@ export default function RecipesPage() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importUrl, setImportUrl] = useState('');
+  const [importingUrl, setImportingUrl] = useState(false);
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError('');
+    setError("");
 
     listRecipes()
       .then((data) => {
@@ -25,7 +26,7 @@ export default function RecipesPage() {
       })
       .catch((err: any) => {
         if (cancelled) return;
-        setError(err?.message || 'Could not load recipes');
+        setError(err?.message || "Could not load recipes");
       })
       .finally(() => {
         if (cancelled) return;
@@ -37,13 +38,53 @@ export default function RecipesPage() {
     };
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setImportingUrl(true);
+
+    try {
+      // const payload = {
+      //   title,
+      //   description: description || undefined,
+      //   prepTimeMinutes: prepTime ? Number(prepTime) : 0,
+      //   cookTimeMinutes: cookTime ? Number(cookTime) : 0,
+      //   totalTimeMinutes: (prepTime ? Number(prepTime) : 0) + (cookTime ? Number(cookTime) : 0),
+      //   servings: servings ? Number(servings) : 4,
+      //   difficulty,
+      //   cuisine: cuisine || undefined,
+      //   course: course || undefined,
+      //   ingredients: ingredients
+      //     .filter((i) => i.name.trim())
+      //     .map((i) => ({
+      //       name: i.name.trim(),
+      //       quantity: i.quantity ? Number(i.quantity) : undefined,
+      //       unit: i.unit?.trim() || undefined,
+      //     })),
+      //   instructions: steps
+      //     .filter((s) => s.text.trim())
+      //     .map((s, idx) => ({
+      //       stepNumber: idx + 1,
+      //       text: s.text.trim(),
+      //       timerMinutes: s.showTimer && s.timerMinutes ? Number(s.timerMinutes) : undefined,
+      //     })),
+      // };
+
+      const { recipe } = await importRecipe({ url: importUrl });
+      setShowImport(false);
+      setImportUrl('');
+      navigate(`/recipes/${recipe._id}`);
+    } catch (err: any) {
+      setError(err?.message || 'Could not import recipe');
+    } finally {
+      setImportingUrl(false);
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1
-          className="text-2xl font-semibold"
-          style={{ color: theme.text }}
-        >
+        <h1 className="text-2xl font-semibold" style={{ color: theme.text }}>
           Recipes
         </h1>
 
@@ -72,12 +113,16 @@ export default function RecipesPage() {
               <button
                 onClick={() => {
                   setShowAddMenu(false);
-                  navigate('/recipes/new');
+                  navigate("/recipes/new");
                 }}
                 className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
                 style={{ color: theme.text }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Create recipe
               </button>
@@ -88,8 +133,12 @@ export default function RecipesPage() {
                 }}
                 className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
                 style={{ color: theme.text }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Import from URL
               </button>
@@ -108,10 +157,7 @@ export default function RecipesPage() {
               border: `1px solid ${theme.border}`,
             }}
           >
-            <h2
-              className="text-lg font-semibold mb-4"
-              style={{ color: theme.text }}
-            >
+            <h2 className="text-lg font-semibold mb-4" style={{ color: theme.text }}>
               Import from URL
             </h2>
             <p className="text-sm mb-4" style={{ color: theme.textMuted }}>
@@ -129,31 +175,40 @@ export default function RecipesPage() {
                 border: `1px solid ${theme.border}`,
               }}
             />
-            <div className="flex justify-end gap-2">
+            <form onSubmit={handleSubmit} className="flex justify-end gap-2">
               <button
-                onClick={() => { setShowImport(false); setImportUrl(''); }}
+                onClick={() => {
+                  setShowImport(false);
+                  setImportUrl("");
+                }}
                 className="px-4 py-1.5 rounded text-sm cursor-pointer transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // TODO: send importUrl to backend parser
-                  setShowImport(false);
-                  setImportUrl('');
-                }}
+                // onClick={() => {
+                //   // TODO: send importUrl to backend parser
+                //   setShowImport(false);
+                //   setImportUrl('');
+                // }}
+                type='submit'
+                disabled={importingUrl}
                 className="px-4 py-1.5 rounded text-sm cursor-pointer transition-colors"
                 style={{
                   background: theme.buttonBg,
                   color: theme.buttonText,
                 }}
               >
-                Import
+                {importingUrl ? 'Importing...' : 'Import'}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
@@ -163,7 +218,7 @@ export default function RecipesPage() {
           Loading recipes…
         </p>
       ) : error ? (
-        <p className="text-sm" style={{ color: '#ef4444' }}>
+        <p className="text-sm" style={{ color: "#ef4444" }}>
           {error}
         </p>
       ) : recipes.length === 0 ? (
@@ -189,7 +244,7 @@ export default function RecipesPage() {
                 {r.title}
               </div>
               <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
-                {r.description || '—'}
+                {r.description || "—"}
               </div>
               <div className="mt-3 text-[11px]" style={{ color: theme.textMuted }}>
                 Updated {new Date(r.updatedAt).toLocaleDateString()}

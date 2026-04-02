@@ -37,6 +37,5 @@ services:
     environment:
       - VITE_API_URL=http://server:8080
 
-
 volumes:
   mongo_data:

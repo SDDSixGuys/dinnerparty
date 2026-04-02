@@ -1,10 +1,10 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 const folderSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
@@ -16,7 +16,7 @@ const folderSchema = new Schema(
     },
     parentId: {
       type: Schema.Types.ObjectId,
-      ref: 'Folder',
+      ref: "Folder",
       default: null,
       index: true,
     },
@@ -24,7 +24,7 @@ const folderSchema = new Schema(
     // e.g., "/rootId/parentId/thisId"
     path: {
       type: String,
-      default: '/',
+      default: "/",
       index: true,
     },
     depth: {
@@ -35,8 +35,8 @@ const folderSchema = new Schema(
       type: Number,
       default: 0,
     },
-    color: { type: String, default: '' },
-    icon: { type: String, default: '' },
+    color: { type: String, default: "" },
+    icon: { type: String, default: "" },
   },
   {
     timestamps: true,
@@ -60,4 +60,4 @@ export interface IFolder extends Document {
   updatedAt: Date;
 }
 
-export default mongoose.model<IFolder>('Folder', folderSchema);
+export default mongoose.model<IFolder>("Folder", folderSchema);

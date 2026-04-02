@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 const ingredientSchema = new Schema(
   {
@@ -14,6 +14,7 @@ const ingredientSchema = new Schema(
 const instructionStepSchema = new Schema(
   {
     stepNumber: { type: Number, required: true },
+    stepName: { type: String, trim: true },
     text: { type: String, required: true },
     timerMinutes: { type: Number },
     imageUrl: { type: String, default: '' },
@@ -41,7 +42,7 @@ const recipeSchema = new Schema(
     // Ownership
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
@@ -54,7 +55,7 @@ const recipeSchema = new Schema(
       maxlength: 200,
     },
     description: { type: String, trim: true, maxlength: 2000 },
-    imageUrl: { type: String, default: '' },
+    imageUrl: { type: String, default: "" },
 
     // Ingredients and instructions (embedded)
     ingredients: [ingredientSchema],
@@ -77,22 +78,22 @@ const recipeSchema = new Schema(
     course: { type: String, trim: true },
     difficulty: {
       type: String,
-      enum: ['easy', 'medium', 'hard'],
-      default: 'medium',
+      enum: ["easy", "medium", "hard"],
+      default: "medium",
     },
 
     // Tags (references to Tag collection)
     tags: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Tag',
+        ref: "Tag",
       },
     ],
 
     // Folder placement
     folderId: {
       type: Schema.Types.ObjectId,
-      ref: 'Folder',
+      ref: "Folder",
       index: true,
     },
 
@@ -100,16 +101,16 @@ const recipeSchema = new Schema(
     sourceUrl: { type: String, trim: true },
     sourceType: {
       type: String,
-      enum: ['manual', 'url_import', 'shared_copy'],
-      default: 'manual',
+      enum: ["manual", "url_import", "shared_copy"],
+      default: "manual",
     },
     sharedFromUserId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
     originalRecipeId: {
       type: Schema.Types.ObjectId,
-      ref: 'Recipe',
+      ref: "Recipe",
     },
 
     // Kitchen equipment needed (for scheduling)
@@ -122,7 +123,7 @@ const recipeSchema = new Schema(
     pairsWith: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Recipe',
+        ref: "Recipe",
       },
     ],
 
@@ -142,12 +143,12 @@ recipeSchema.index({ userId: 1, isFavorite: 1 });
 
 // Text index for full-text search
 recipeSchema.index({
-  title: 'text',
-  description: 'text',
-  'ingredients.name': 'text',
-  cuisine: 'text',
-  course: 'text',
-  notes: 'text',
+  title: "text",
+  description: "text",
+  "ingredients.name": "text",
+  cuisine: "text",
+  course: "text",
+  notes: "text",
 });
 
 export interface IRecipe extends Document {
@@ -164,6 +165,7 @@ export interface IRecipe extends Document {
   }>;
   instructions: Array<{
     stepNumber: number;
+    stepName?: string;
     text: string;
     timerMinutes?: number;
     imageUrl?: string;
@@ -186,11 +188,11 @@ export interface IRecipe extends Document {
   };
   cuisine?: string;
   course?: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   tags: mongoose.Types.ObjectId[];
   folderId?: mongoose.Types.ObjectId;
   sourceUrl?: string;
-  sourceType: 'manual' | 'url_import' | 'shared_copy';
+  sourceType: "manual" | "url_import" | "shared_copy";
   sharedFromUserId?: mongoose.Types.ObjectId;
   originalRecipeId?: mongoose.Types.ObjectId;
   equipment: string[];
@@ -201,4 +203,4 @@ export interface IRecipe extends Document {
   updatedAt: Date;
 }
 
-export default mongoose.model<IRecipe>('Recipe', recipeSchema);
+export default mongoose.model<IRecipe>("Recipe", recipeSchema);

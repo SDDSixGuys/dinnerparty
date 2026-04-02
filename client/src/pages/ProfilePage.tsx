@@ -1,5 +1,5 @@
-import { useAuth } from '../App';
-import { useTheme } from '../ThemeContext';
+import { useAuth } from "../App";
+import { useTheme } from "../ThemeContext";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -24,7 +24,7 @@ export default function ProfilePage() {
               Username
             </div>
             <div className="text-sm" style={{ color: theme.text }}>
-              {user?.username || '—'}
+              {user?.username || "—"}
             </div>
           </div>
 
@@ -33,7 +33,7 @@ export default function ProfilePage() {
               Email
             </div>
             <div className="text-sm" style={{ color: theme.text }}>
-              {user?.email || '—'}
+              {user?.email || "—"}
             </div>
           </div>
         </div>
@@ -41,4 +41,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

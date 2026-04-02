@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
-import { useTheme } from '../ThemeContext';
-import { listRecipes, type RecipeListItem } from '../api/recipes';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../App";
+import { useTheme } from "../ThemeContext";
+import { listRecipes, type RecipeListItem } from "../api/recipes";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -35,10 +35,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8">
-      <h1
-        className="text-2xl font-semibold mb-1"
-        style={{ color: theme.text }}
-      >
+      <h1 className="text-2xl font-semibold mb-1" style={{ color: theme.text }}>
         Dashboard
       </h1>
       <p className="text-sm" style={{ color: theme.textMuted }}>
@@ -51,7 +48,7 @@ export default function DashboardPage() {
             Recent recipes
           </h2>
           <button
-            onClick={() => navigate('/recipes')}
+            onClick={() => navigate("/recipes")}
             className="text-xs cursor-pointer transition-colors"
             style={{ color: theme.textMuted }}
             onMouseEnter={(e) => {
@@ -92,7 +89,7 @@ export default function DashboardPage() {
                   {r.title}
                 </div>
                 <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
-                  {r.description || '—'}
+                  {r.description || "—"}
                 </div>
               </button>
             ))}

@@ -1,10 +1,10 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 const tagSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
@@ -15,7 +15,7 @@ const tagSchema = new Schema(
       lowercase: true,
       maxlength: 50,
     },
-    color: { type: String, default: '#808080' },
+    color: { type: String, default: "#808080" },
   },
   {
     timestamps: true,
@@ -33,4 +33,4 @@ export interface ITag extends Document {
   updatedAt: Date;
 }
 
-export default mongoose.model<ITag>('Tag', tagSchema);
+export default mongoose.model<ITag>("Tag", tagSchema);
