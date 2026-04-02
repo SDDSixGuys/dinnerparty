@@ -12,12 +12,12 @@ export default function RecipesPage() {
   const [importingUrl, setImportingUrl] = useState(false);
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError('');
+    setError("");
 
     listRecipes()
       .then((data) => {
@@ -26,7 +26,7 @@ export default function RecipesPage() {
       })
       .catch((err: any) => {
         if (cancelled) return;
-        setError(err?.message || 'Could not load recipes');
+        setError(err?.message || "Could not load recipes");
       })
       .finally(() => {
         if (cancelled) return;
@@ -84,10 +84,7 @@ export default function RecipesPage() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1
-          className="text-2xl font-semibold"
-          style={{ color: theme.text }}
-        >
+        <h1 className="text-2xl font-semibold" style={{ color: theme.text }}>
           Recipes
         </h1>
 
@@ -116,12 +113,16 @@ export default function RecipesPage() {
               <button
                 onClick={() => {
                   setShowAddMenu(false);
-                  navigate('/recipes/new');
+                  navigate("/recipes/new");
                 }}
                 className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
                 style={{ color: theme.text }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Create recipe
               </button>
@@ -132,8 +133,12 @@ export default function RecipesPage() {
                 }}
                 className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
                 style={{ color: theme.text }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Import from URL
               </button>
@@ -152,10 +157,7 @@ export default function RecipesPage() {
               border: `1px solid ${theme.border}`,
             }}
           >
-            <h2
-              className="text-lg font-semibold mb-4"
-              style={{ color: theme.text }}
-            >
+            <h2 className="text-lg font-semibold mb-4" style={{ color: theme.text }}>
               Import from URL
             </h2>
             <p className="text-sm mb-4" style={{ color: theme.textMuted }}>
@@ -175,11 +177,18 @@ export default function RecipesPage() {
             />
             <form onSubmit={handleSubmit} className="flex justify-end gap-2">
               <button
-                onClick={() => { setShowImport(false); setImportUrl(''); }}
+                onClick={() => {
+                  setShowImport(false);
+                  setImportUrl("");
+                }}
                 className="px-4 py-1.5 rounded text-sm cursor-pointer transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = theme.sidebarHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.sidebarHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Cancel
               </button>
@@ -209,7 +218,7 @@ export default function RecipesPage() {
           Loading recipes…
         </p>
       ) : error ? (
-        <p className="text-sm" style={{ color: '#ef4444' }}>
+        <p className="text-sm" style={{ color: "#ef4444" }}>
           {error}
         </p>
       ) : recipes.length === 0 ? (
@@ -235,7 +244,7 @@ export default function RecipesPage() {
                 {r.title}
               </div>
               <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
-                {r.description || '—'}
+                {r.description || "—"}
               </div>
               <div className="mt-3 text-[11px]" style={{ color: theme.textMuted }}>
                 Updated {new Date(r.updatedAt).toLocaleDateString()}
