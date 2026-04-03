@@ -1,4 +1,4 @@
-import { apiJson } from "./http";
+import { HttpClient, httpClient } from './http';
 
 export interface RecipeListItem {
   _id: string;
@@ -36,46 +36,72 @@ export interface RecipeDetail extends RecipeListItem {
   notes?: string;
 }
 
-export async function listRecipes(params?: {
+export class RecipeApiClient {
+  private http: HttpClient;
+
+  constructor(http: HttpClient) {
+    this.http = http;
+  }
+
+  list(params?: { q?: string; folderId?: string; tagId?: string; isFavorite?: boolean }) {
+    const qs = new URLSearchParams();
+    if (params?.q) qs.set('q', params.q);
+    if (params?.folderId) qs.set('folderId', params.folderId);
+    if (params?.tagId) qs.set('tagId', params.tagId);
+    if (typeof params?.isFavorite === 'boolean') qs.set('isFavorite', String(params.isFavorite));
+
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.http.json<{ recipes: RecipeListItem[] }>(`/api/recipes${suffix}`);
+  }
+
+  get(id: string) {
+    return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/${id}`);
+  }
+
+  create(payload: any) {
+    return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  import(payload: any) {
+    return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/import`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  update(id: string, data: any) {
+    return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  delete(id: string) {
+    return this.http.json<{ message: string }>(`/api/recipes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+export const recipeApiClient = new RecipeApiClient(httpClient);
+
+// Named exports — same API surface as before, now delegating to the class instance
+export const listRecipes = (params?: {
   q?: string;
   folderId?: string;
   tagId?: string;
   isFavorite?: boolean;
-}) {
-  const qs = new URLSearchParams();
-  if (params?.q) qs.set("q", params.q);
-  if (params?.folderId) qs.set("folderId", params.folderId);
-  if (params?.tagId) qs.set("tagId", params.tagId);
-  if (typeof params?.isFavorite === "boolean") qs.set("isFavorite", String(params.isFavorite));
+}) => recipeApiClient.list(params);
 
-  const suffix = qs.toString() ? `?${qs.toString()}` : "";
-  return apiJson<{ recipes: RecipeListItem[] }>(`/api/recipes${suffix}`);
-}
+export const getRecipe = (id: string) => recipeApiClient.get(id);
 
-export async function getRecipe(id: string) {
-  return apiJson<{ recipe: RecipeDetail }>(`/api/recipes/${id}`);
-}
+export const createRecipe = (payload: any) => recipeApiClient.create(payload);
 
-export async function createRecipe(payload: any) {
-  return apiJson<{ recipe: RecipeDetail }>(`/api/recipes`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
+export const importRecipe = (payload: any) => recipeApiClient.import(payload);
 
-export async function importRecipe(payload: any) {
-  return apiJson<{ recipe: RecipeDetail }>(`/api/recipes/import`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
+export const updateRecipe = (id: string, data: any) => recipeApiClient.update(id, data);
 
-export const updateRecipe = (id: string, data: any) =>
-  fetch(`/api/recipes/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  }).then((res) => res.json());
-
-export const deleteRecipe = (id: string) =>
-  fetch(`/api/recipes/${id}`, { method: "DELETE" }).then((res) => res.json());
+export const deleteRecipe = (id: string) => recipeApiClient.delete(id);
