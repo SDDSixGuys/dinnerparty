@@ -16,7 +16,7 @@
     "format:check": "prettier --check .",
     "lint": "npm run lint -w client && npm run lint -w dinnerparty-server",
     "lint:fix": "npm run lint:fix -w client && npm run lint:fix -w dinnerparty-server"
-  }
+  },
   "lint-staged": {
     "**/*.{ts,tsx,js,mjs,json,css,md}": "prettier --write",
     "client/**/*.{ts,tsx}": "eslint --fix --config client/eslint.config.js",
