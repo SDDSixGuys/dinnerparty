@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { RecipeService } from '../services/RecipeService';
+import { Request, Response, NextFunction } from "express";
+import { RecipeService } from "../services/RecipeService";
 
 export class RecipeController {
   constructor(private recipeService: RecipeService) {}
@@ -14,7 +14,7 @@ export class RecipeController {
         q,
         folderId,
         tagId,
-        isFavorite: typeof isFavorite === 'string' ? isFavorite === 'true' : undefined,
+        isFavorite: typeof isFavorite === "string" ? isFavorite === "true" : undefined,
       });
 
       res.json({ recipes });
@@ -25,7 +25,7 @@ export class RecipeController {
 
   get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const recipe = await this.recipeService.get(req.params.id, req.user!.userId);
+      const recipe = await this.recipeService.get(req.params.id as string, req.user!.userId);
       res.json({ recipe });
     } catch (err) {
       next(err);
@@ -35,7 +35,8 @@ export class RecipeController {
   create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.userId;
-      const { userId: _ignoredUserId, ...body } = req.body ?? {};
+      const body = { ...(req.body ?? {}) };
+      delete body.userId;
 
       const recipe = await this.recipeService.create(body, userId);
       res.status(201).json({ recipe });
@@ -57,9 +58,10 @@ export class RecipeController {
   update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.userId;
-      const { userId: _ignoredUserId, ...updates } = req.body ?? {};
+      const updates = { ...(req.body ?? {}) };
+      delete updates.userId;
 
-      const recipe = await this.recipeService.update(req.params.id, userId, updates);
+      const recipe = await this.recipeService.update(req.params.id as string, userId, updates);
       res.json({ recipe });
     } catch (err) {
       next(err);
@@ -68,8 +70,8 @@ export class RecipeController {
 
   delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await this.recipeService.delete(req.params.id, req.user!.userId);
-      res.json({ message: 'Deleted' });
+      await this.recipeService.delete(req.params.id as string, req.user!.userId);
+      res.json({ message: "Deleted" });
     } catch (err) {
       next(err);
     }

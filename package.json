@@ -13,7 +13,7 @@
     "pdfmake": "^0.3.7"
   },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run lint -w client && npm run lint -w dinnerparty-server",
