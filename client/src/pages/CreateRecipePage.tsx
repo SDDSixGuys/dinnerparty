@@ -227,27 +227,43 @@ export default function CreateRecipePage() {
               <label className={labelClass} style={{ color: theme.textMuted }}>
                 Cuisine
               </label>
-              <input
-                type="text"
+              <select
                 value={cuisine}
                 onChange={(e) => setCuisine(e.target.value)}
-                placeholder="e.g. Italian"
                 className="w-full px-3 py-2 rounded text-sm outline-none"
                 style={inputStyle}
-              />
+              >
+                <option value="">Select Cuisine...</option>
+                <option value="American">American</option>
+                <option value="Mexican">Mexican</option>
+                <option value="Italian">Italian</option>
+                <option value="Asian">Asian</option>
+                <option value="Indian">Indian</option>
+                <option value="Mediterranean">Mediterranean</option>
+                <option value="French">French</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
             <div>
               <label className={labelClass} style={{ color: theme.textMuted }}>
                 Course
               </label>
-              <input
-                type="text"
+              <select
                 value={course}
                 onChange={(e) => setCourse(e.target.value)}
-                placeholder="e.g. Dinner"
                 className="w-full px-3 py-2 rounded text-sm outline-none"
                 style={inputStyle}
-              />
+              >
+                <option value="">Select Meal Type...</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Snack">Snack</option>
+                <option value="Dessert">Dessert</option>
+                <option value="Appetizer">Appetizer</option>
+                <option value="Side Dish">Side Dish</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
             <div>
               <label className={labelClass} style={{ color: theme.textMuted }}>
