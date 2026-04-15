@@ -13,13 +13,20 @@ export default function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
 
-    listRecipes()
+    listRecipes(debouncedQuery ? { q: debouncedQuery } : undefined)
       .then((data) => {
         if (cancelled) return;
         setRecipes(data.recipes || []);
@@ -36,7 +43,7 @@ export default function RecipesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debouncedQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,12 +90,31 @@ export default function RecipesPage() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-semibold" style={{ color: theme.text }}>
           Recipes
         </h1>
 
-        {/* Add Button */}
+        <div className="flex items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-3 py-1.5 rounded text-sm outline-none w-64 transition-colors"
+              style={{
+                background: theme.card,
+                color: theme.text,
+                border: `1px solid ${theme.border}`,
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = theme.accent)}
+              onBlur={(e) => (e.currentTarget.style.borderColor = theme.border)}
+            />
+          </div>
+
+          {/* Add Button */}
         <div className="relative">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
@@ -144,6 +170,7 @@ export default function RecipesPage() {
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
 
@@ -223,7 +250,9 @@ export default function RecipesPage() {
         </p>
       ) : recipes.length === 0 ? (
         <p className="text-sm" style={{ color: theme.textMuted }}>
-          No recipes yet. Click + to add your first one.
+          {debouncedQuery 
+            ? "No recipes found matching your search." 
+            : "No recipes yet. Click + to add your first one."}
         </p>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
