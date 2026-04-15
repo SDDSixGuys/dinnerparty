@@ -6,6 +6,10 @@ export interface RecipeFilters {
   folderId?: string;
   tagId?: string;
   isFavorite?: boolean;
+  difficulty?: string[];
+  cuisine?: string[];
+  course?: string[];
+  maxTotalTime?: number;
 }
 
 export class RecipeRepository {
@@ -16,6 +20,20 @@ export class RecipeRepository {
     if (filters.tagId) query.tags = filters.tagId;
     if (typeof filters.isFavorite === 'boolean') query.isFavorite = filters.isFavorite;
     if (filters.q?.trim()) query.$text = { $search: filters.q.trim() };
+    
+    if (filters.difficulty && filters.difficulty.length > 0) {
+      query.difficulty = { $in: filters.difficulty };
+    }
+    if (filters.cuisine && filters.cuisine.length > 0) {
+      // Case-insensitive match or exact match depending on how it's stored. Assume exact for now.
+      query.cuisine = { $in: filters.cuisine };
+    }
+    if (filters.course && filters.course.length > 0) {
+      query.course = { $in: filters.course };
+    }
+    if (filters.maxTotalTime !== undefined) {
+      query.totalTimeMinutes = { $lte: filters.maxTotalTime };
+    }
 
     return Recipe.find(query)
       .sort(filters.q?.trim() ? { score: { $meta: 'textScore' } } : { updatedAt: -1 })

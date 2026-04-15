@@ -43,12 +43,26 @@ export class RecipeApiClient {
     this.http = http;
   }
 
-  list(params?: { q?: string; folderId?: string; tagId?: string; isFavorite?: boolean }) {
+  list(params?: { 
+    q?: string; 
+    folderId?: string; 
+    tagId?: string; 
+    isFavorite?: boolean;
+    difficulty?: string[];
+    cuisine?: string[];
+    course?: string[];
+    maxTotalTime?: number;
+  }) {
     const qs = new URLSearchParams();
     if (params?.q) qs.set('q', params.q);
     if (params?.folderId) qs.set('folderId', params.folderId);
     if (params?.tagId) qs.set('tagId', params.tagId);
     if (typeof params?.isFavorite === 'boolean') qs.set('isFavorite', String(params.isFavorite));
+    
+    if (params?.difficulty?.length) qs.set('difficulty', params.difficulty.join(','));
+    if (params?.cuisine?.length) qs.set('cuisine', params.cuisine.join(','));
+    if (params?.course?.length) qs.set('course', params.course.join(','));
+    if (params?.maxTotalTime !== undefined) qs.set('maxTotalTime', String(params.maxTotalTime));
 
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return this.http.json<{ recipes: RecipeListItem[] }>(`/api/recipes${suffix}`);
@@ -94,6 +108,10 @@ export const listRecipes = (params?: {
   folderId?: string;
   tagId?: string;
   isFavorite?: boolean;
+  difficulty?: string[];
+  cuisine?: string[];
+  course?: string[];
+  maxTotalTime?: number;
 }) => recipeApiClient.list(params);
 
 export const getRecipe = (id: string) => recipeApiClient.get(id);

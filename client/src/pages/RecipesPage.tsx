@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { importRecipe, listRecipes, type RecipeListItem } from '../api/recipes';
 
+const CUISINE_OPTIONS = ["American", "Mexican", "Italian", "Asian", "Indian", "Mediterranean", "French", "Other"];
+const COURSE_OPTIONS = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert", "Appetizer", "Side Dish", "Other"];
+const DIFFICULTY_OPTIONS = ["easy", "medium", "hard"];
+
 export default function RecipesPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -16,6 +20,12 @@ export default function RecipesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
+  const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
+  const [courseFilter, setCourseFilter] = useState<string[]>([]);
+  const [maxTimeFilter, setMaxTimeFilter] = useState<number | ''>('');
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
@@ -26,7 +36,13 @@ export default function RecipesPage() {
     setLoading(true);
     setError("");
 
-    listRecipes(debouncedQuery ? { q: debouncedQuery } : undefined)
+    listRecipes({
+      ...(debouncedQuery ? { q: debouncedQuery } : {}),
+      ...(difficultyFilter.length ? { difficulty: difficultyFilter } : {}),
+      ...(cuisineFilter.length ? { cuisine: cuisineFilter } : {}),
+      ...(courseFilter.length ? { course: courseFilter } : {}),
+      ...(maxTimeFilter !== '' ? { maxTotalTime: maxTimeFilter } : {})
+    })
       .then((data) => {
         if (cancelled) return;
         setRecipes(data.recipes || []);
@@ -43,7 +59,7 @@ export default function RecipesPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, difficultyFilter, cuisineFilter, courseFilter, maxTimeFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +128,120 @@ export default function RecipesPage() {
               onFocus={(e) => (e.currentTarget.style.borderColor = theme.accent)}
               onBlur={(e) => (e.currentTarget.style.borderColor = theme.border)}
             />
+          </div>
+
+          {/* Filter Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-3 py-1.5 rounded text-sm transition-colors cursor-pointer"
+              style={{
+                background: theme.card,
+                color: theme.text,
+                border: `1px solid ${showFilters ? theme.accent : theme.border}`,
+              }}
+            >
+              Filters
+            </button>
+
+            {showFilters && (
+              <div
+                className="absolute right-0 mt-2 w-72 rounded shadow-lg p-4 z-10 max-h-[70vh] overflow-y-auto"
+                style={{
+                  background: theme.card,
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text,
+                }}
+              >
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: theme.textMuted }}>Difficulty</h3>
+                  <div className="flex flex-col gap-1">
+                    {DIFFICULTY_OPTIONS.map((diff) => (
+                      <label key={diff} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={difficultyFilter.includes(diff)}
+                          onChange={(e) => {
+                            if (e.target.checked) setDifficultyFilter([...difficultyFilter, diff]);
+                            else setDifficultyFilter(difficultyFilter.filter((d) => d !== diff));
+                          }}
+                        />
+                        <span className="capitalize">{diff}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: theme.textMuted }}>Meal Type</h3>
+                  <div className="flex flex-col gap-1">
+                    {COURSE_OPTIONS.map((course) => (
+                      <label key={course} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={courseFilter.includes(course)}
+                          onChange={(e) => {
+                            if (e.target.checked) setCourseFilter([...courseFilter, course]);
+                            else setCourseFilter(courseFilter.filter((c) => c !== course));
+                          }}
+                        />
+                        <span>{course}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: theme.textMuted }}>Cuisine</h3>
+                  <div className="flex flex-col gap-1">
+                    {CUISINE_OPTIONS.map((cuisine) => (
+                      <label key={cuisine} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={cuisineFilter.includes(cuisine)}
+                          onChange={(e) => {
+                            if (e.target.checked) setCuisineFilter([...cuisineFilter, cuisine]);
+                            else setCuisineFilter(cuisineFilter.filter((c) => c !== cuisine));
+                          }}
+                        />
+                        <span>{cuisine}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: theme.textMuted }}>Max Total Time (min)</h3>
+                  <input
+                    type="number"
+                    value={maxTimeFilter}
+                    onChange={(e) => setMaxTimeFilter(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 30"
+                    className="w-full px-2 py-1 rounded text-sm outline-none"
+                    style={{
+                      background: theme.bg,
+                      color: theme.text,
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  />
+                </div>
+
+                {(difficultyFilter.length > 0 || cuisineFilter.length > 0 || courseFilter.length > 0 || maxTimeFilter !== '') && (
+                  <button
+                    onClick={() => {
+                      setDifficultyFilter([]);
+                      setCuisineFilter([]);
+                      setCourseFilter([]);
+                      setMaxTimeFilter('');
+                    }}
+                    className="mt-4 text-xs underline cursor-pointer w-full text-center"
+                    style={{ color: theme.textMuted }}
+                  >
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Add Button */}

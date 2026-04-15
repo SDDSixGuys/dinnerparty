@@ -7,7 +7,9 @@ export class RecipeController {
   list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.userId;
-      const { q, folderId, tagId, isFavorite } = req.query as Record<string, string>;
+      const { q, folderId, tagId, isFavorite, difficulty, cuisine, course, maxTotalTime } = req.query as Record<string, string>;
+
+      const parseArray = (val?: string) => val ? val.split(',').map(s => s.trim()).filter(Boolean) : undefined;
 
       const recipes = await this.recipeService.list({
         userId,
@@ -15,6 +17,10 @@ export class RecipeController {
         folderId,
         tagId,
         isFavorite: typeof isFavorite === "string" ? isFavorite === "true" : undefined,
+        difficulty: parseArray(difficulty),
+        cuisine: parseArray(cuisine),
+        course: parseArray(course),
+        maxTotalTime: maxTotalTime ? parseInt(maxTotalTime, 10) : undefined,
       });
 
       res.json({ recipes });
