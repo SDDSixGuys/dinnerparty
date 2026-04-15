@@ -19,7 +19,18 @@ export class RecipeRepository {
     if (filters.folderId) query.folderId = filters.folderId;
     if (filters.tagId) query.tags = filters.tagId;
     if (typeof filters.isFavorite === 'boolean') query.isFavorite = filters.isFavorite;
-    if (filters.q?.trim()) query.$text = { $search: filters.q.trim() };
+    if (filters.q?.trim()) {
+      const searchTerm = filters.q.trim();
+      const fuzzyRegex = searchTerm.split('').join('.*');
+      
+      query.$or = [
+        { title: { $regex: fuzzyRegex, $options: 'i' } },
+        { "ingredients.name": { $regex: fuzzyRegex, $options: 'i' } },
+        { description: { $regex: fuzzyRegex, $options: 'i' } },
+        { cuisine: { $regex: fuzzyRegex, $options: 'i' } },
+        { course: { $regex: fuzzyRegex, $options: 'i' } }
+      ];
+    }
     
     if (filters.difficulty && filters.difficulty.length > 0) {
       query.difficulty = { $in: filters.difficulty };
@@ -35,9 +46,49 @@ export class RecipeRepository {
       query.totalTimeMinutes = { $lte: filters.maxTotalTime };
     }
 
-    return Recipe.find(query)
-      .sort(filters.q?.trim() ? { score: { $meta: 'textScore' } } : { updatedAt: -1 })
-      .limit(200);
+// Used AI to write this algorithm. Human reviewed and tested
+// "Fuzzy" regex search
+
+    let recipes = await Recipe.find(query).sort({ updatedAt: -1 }).limit(200);
+
+    if (filters.q?.trim()) {
+      const term = filters.q.trim().toLowerCase();
+      
+      const fuzzyMatchScore = (text: string, search: string) => {
+        if (!text) return 0;
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes(search)) return 1;
+        
+        let searchIdx = 0;
+        for (let i = 0; i < lowerText.length; i++) {
+          if (lowerText[i] === search[searchIdx]) {
+            searchIdx++;
+          }
+          if (searchIdx === search.length) return 0.5;
+        }
+        return 0;
+      };
+
+      recipes = recipes.sort((a, b) => {
+        const getScore = (r: IRecipe) => {
+          let score = 0;
+          score += fuzzyMatchScore(r.title, term) * 10;
+          
+          if (r.ingredients.some(i => fuzzyMatchScore(i.name, term) > 0)) {
+            score += 5;
+          }
+          
+          score += fuzzyMatchScore(r.cuisine || '', term) * 2;
+          score += fuzzyMatchScore(r.course || '', term) * 2;
+          score += fuzzyMatchScore(r.description || '', term) * 1;
+          
+          return score;
+        };
+        return getScore(b) - getScore(a);
+      });
+    }
+
+    return recipes;
   }
 
   async findOne(id: string, userId: string): Promise<IRecipe | null> {

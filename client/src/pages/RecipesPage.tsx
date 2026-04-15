@@ -106,20 +106,80 @@ export default function RecipesPage() {
 
   return (
     <div className="p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <h1 className="text-2xl font-semibold" style={{ color: theme.text }}>
-          Recipes
-        </h1>
+      <div className="flex flex-col mb-6 gap-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold" style={{ color: theme.text }}>
+            Recipes
+          </h1>
 
-        <div className="flex items-center gap-3">
-          {/* Search Bar */}
+          {/* Add Button */}
           <div className="relative">
+            <button
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="w-8 h-8 flex items-center justify-center rounded text-lg font-light transition-colors cursor-pointer"
+              style={{
+                background: theme.buttonBg,
+                color: theme.buttonText,
+              }}
+            >
+              +
+            </button>
+
+            {/* Dropdown */}
+            {showAddMenu && (
+              <div
+                className="absolute right-0 mt-2 w-48 rounded shadow-sm py-1 z-10"
+                style={{
+                  background: theme.card,
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setShowAddMenu(false);
+                    navigate("/recipes/new");
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
+                  style={{ color: theme.text }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = theme.sidebarHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  Create recipe
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddMenu(false);
+                    setShowImport(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
+                  style={{ color: theme.text }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = theme.sidebarHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  Import from URL
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-3 py-1.5 rounded text-sm outline-none w-64 transition-colors"
+              className="px-3 py-1.5 rounded text-sm outline-none w-full transition-colors"
               style={{
                 background: theme.card,
                 color: theme.text,
@@ -134,7 +194,7 @@ export default function RecipesPage() {
           <div className="relative">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="px-3 py-1.5 rounded text-sm transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded text-sm transition-colors cursor-pointer w-full sm:w-auto"
               style={{
                 background: theme.card,
                 color: theme.text,
@@ -243,64 +303,6 @@ export default function RecipesPage() {
               </div>
             )}
           </div>
-
-          {/* Add Button */}
-        <div className="relative">
-          <button
-            onClick={() => setShowAddMenu(!showAddMenu)}
-            className="w-8 h-8 flex items-center justify-center rounded text-lg font-light transition-colors cursor-pointer"
-            style={{
-              background: theme.buttonBg,
-              color: theme.buttonText,
-            }}
-          >
-            +
-          </button>
-
-          {/* Dropdown */}
-          {showAddMenu && (
-            <div
-              className="absolute right-0 mt-2 w-48 rounded shadow-sm py-1 z-10"
-              style={{
-                background: theme.card,
-                border: `1px solid ${theme.border}`,
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowAddMenu(false);
-                  navigate("/recipes/new");
-                }}
-                className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
-                style={{ color: theme.text }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = theme.sidebarHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                Create recipe
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddMenu(false);
-                  setShowImport(true);
-                }}
-                className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
-                style={{ color: theme.text }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = theme.sidebarHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                Import from URL
-              </button>
-            </div>
-          )}
-        </div>
         </div>
       </div>
 

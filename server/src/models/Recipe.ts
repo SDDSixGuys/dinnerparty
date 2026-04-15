@@ -142,14 +142,27 @@ recipeSchema.index({ userId: 1, tags: 1 });
 recipeSchema.index({ userId: 1, isFavorite: 1 });
 
 // Text index for full-text search
-recipeSchema.index({
-  title: "text",
-  description: "text",
-  "ingredients.name": "text",
-  cuisine: "text",
-  course: "text",
-  notes: "text",
-});
+recipeSchema.index(
+  {
+    title: "text",
+    description: "text",
+    "ingredients.name": "text",
+    cuisine: "text",
+    course: "text",
+    notes: "text",
+  },
+  {
+    weights: {
+      title: 10,
+      "ingredients.name": 3,
+      cuisine: 2,
+      course: 2,
+      description: 1,
+      notes: 1,
+    },
+    name: "RecipeTextIndex",
+  }
+);
 
 export interface IRecipe extends Document {
   userId: mongoose.Types.ObjectId;
