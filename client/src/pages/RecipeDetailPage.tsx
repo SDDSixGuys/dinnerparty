@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { deleteRecipe, getRecipe, type RecipeDetail } from "../api/recipes";
+import { downloadRecipeAsPDF } from "../utils/pdfGenerator";
 
 /* --- Helper Component for Step Timers --- */
 function StepTimer({ minutes, theme }: { minutes: number; theme: any }) {
@@ -9,64 +10,58 @@ function StepTimer({ minutes, theme }: { minutes: number; theme: any }) {
   const [isActive, setIsActive] = useState(false);
   const [isAlarming, setIsAlarming] = useState(false);
 
-  const [audio] = useState(
-    () => new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg")
-  );
-  const audioIntervalRef = useRef<any>(null);
-  const alarmTimeoutRef = useRef<any>(null);
+  // Use useRef for Audio to prevent "value cannot be modified" lint error
+  const audioRef = useRef(new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"));
+  const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const alarmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beepCountRef = useRef(0);
 
+  const stopAlarm = useCallback(() => {
+      if (audioIntervalRef.current) {
+        clearInterval(audioIntervalRef.current);
+        audioIntervalRef.current = null;
+      }
+      if (alarmTimeoutRef.current) {
+        clearTimeout(alarmTimeoutRef.current);
+        alarmTimeoutRef.current = null;
+      }
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsAlarming(false);
+  }, []);
+
   useEffect(() => {
-    let timerInterval: any = null;
+      let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-    if (isActive && secondsLeft > 0) {
-      timerInterval = setInterval(() => {
-        setSecondsLeft((s) => s - 1);
-      }, 1000);
-    } else if (secondsLeft === 0 && isActive) {
-      clearInterval(timerInterval);
-      setIsActive(false);
-      setIsAlarming(true);
-      beepCountRef.current = 0;
+      if (isActive && secondsLeft > 0) {
+        timerInterval = setInterval(() => {
+          setSecondsLeft((s) => s - 1);
+        }, 1000);
+      } else if (secondsLeft === 0 && isActive) {
+        setIsActive(false);
+        setIsAlarming(true);
+        beepCountRef.current = 0;
 
-      const playBeep = () => {
-        const positionInCycle = beepCountRef.current % 4;
+        const playBeep = () => {
+          const positionInCycle = beepCountRef.current % 4;
+          if (positionInCycle < 3) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+          }
+          beepCountRef.current += 1;
+        };
 
-        if (positionInCycle < 3) {
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-        }
+        playBeep();
+        audioIntervalRef.current = setInterval(playBeep, 200);
+        alarmTimeoutRef.current = setTimeout(() => {
+          stopAlarm();
+        }, 60000);
+      }
 
-        beepCountRef.current += 1;
+      return () => {
+        if (timerInterval) clearInterval(timerInterval);
       };
-
-      playBeep(); // play immediately on trigger
-      audioIntervalRef.current = setInterval(playBeep, 200); // 200ms between beeps/pause slots
-
-      alarmTimeoutRef.current = setTimeout(() => {
-        stopAlarm();
-      }, 60000);
-    }
-
-    return () => {
-      if (timerInterval) clearInterval(timerInterval);
-      // Note: audioIntervalRef is intentionally NOT cleared here
-    };
-  }, [isActive, secondsLeft, audio]);
-
-  const stopAlarm = () => {
-    if (audioIntervalRef.current) {
-      clearInterval(audioIntervalRef.current);
-      audioIntervalRef.current = null;
-    }
-    if (alarmTimeoutRef.current) {
-      clearTimeout(alarmTimeoutRef.current);
-      alarmTimeoutRef.current = null;
-    }
-    audio.pause();
-    audio.currentTime = 0;
-    setIsAlarming(false);
-  };
+  }, [isActive, secondsLeft, stopAlarm]);
 
   const handleReset = () => {
     stopAlarm();
@@ -172,7 +167,6 @@ export default function RecipeDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
     setError("");
 
     getRecipe(id)
@@ -379,6 +373,17 @@ export default function RecipeDetailPage() {
         className="mt-16 pt-8 border-t flex justify-center gap-4"
         style={{ borderColor: theme.border }}
       >
+        <button
+          onClick={() => downloadRecipeAsPDF(recipe)}
+          className="px-6 py-2 rounded border text-sm font-medium transition-colors"
+          style={{
+            background: theme.buttonBg,
+            color: theme.buttonText,
+            borderColor: theme.border
+          }}
+        >
+          Download PDF
+        </button>
         <button
           onClick={() => navigate(`/recipes/${id}/edit`)} // id comes from useParams
           className="px-6 py-2 rounded border text-sm font-medium"
