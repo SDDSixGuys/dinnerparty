@@ -47,6 +47,8 @@ export default function RecipesPage() {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editFolderName, setEditFolderName] = useState("");
   const [folderContextMenu, setFolderContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [folderRefresh, setFolderRefresh] = useState(0);
+  const refreshFolders = () => setFolderRefresh((n) => n + 1);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -86,17 +88,13 @@ export default function RecipesPage() {
   }, [debouncedQuery, activeFolderId, difficultyFilter, cuisineFilter, courseFilter, maxTimeFilter]);
 
   // Fetch folders for the current level
-  const fetchFolders = () => {
+  useEffect(() => {
     setFoldersLoading(true);
     listFolders(activeFolderId ? { parentId: activeFolderId } : undefined)
       .then((data) => setFolders(data.folders || []))
       .catch(() => setFolders([]))
       .finally(() => setFoldersLoading(false));
-  };
-
-  useEffect(() => {
-    fetchFolders();
-  }, [activeFolderId]);
+  }, [activeFolderId, folderRefresh]);
 
   // Fetch current folder info for breadcrumb
   useEffect(() => {
@@ -123,7 +121,7 @@ export default function RecipesPage() {
       await createFolder({ name: newFolderName.trim(), parentId: activeFolderId });
       setNewFolderName("");
       setShowNewFolder(false);
-      fetchFolders();
+      refreshFolders();
     } catch {
       // silently fail
     } finally {
@@ -139,7 +137,7 @@ export default function RecipesPage() {
     try {
       await updateFolder(id, { name: editFolderName.trim() });
       setEditingFolderId(null);
-      fetchFolders();
+      refreshFolders();
     } catch {
       setEditingFolderId(null);
     }
@@ -148,7 +146,7 @@ export default function RecipesPage() {
   const handleDeleteFolder = async (id: string) => {
     try {
       await deleteFolder(id);
-      fetchFolders();
+      refreshFolders();
     } catch {
       // silently fail
     }
