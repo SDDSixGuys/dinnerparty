@@ -136,10 +136,10 @@ export class FolderService {
       path: { $regex: `^${folder.path}/` },
     });
 
-    // Move recipes in this folder (and descendants) to unfiled
+    // Remove this folder from any recipes' folderIds arrays
     await Recipe.updateMany(
-      { userId, folderId: id },
-      { $unset: { folderId: '' } }
+      { userId, folderIds: id },
+      { $pull: { folderIds: id } }
     );
 
     return this.folderRepository.delete(id, userId);
