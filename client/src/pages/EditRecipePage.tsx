@@ -31,7 +31,7 @@ export default function EditRecipePage() {
   const [difficulty, setDifficulty] = useState("medium");
   const [cuisine, setCuisine] = useState("");
   const [course, setCourse] = useState("");
-  const [folderId, setFolderId] = useState("");
+  const [folderIds, setFolderIds] = useState<string[]>([]);
   const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -59,7 +59,7 @@ export default function EditRecipePage() {
         setDifficulty(r.difficulty || 'medium');
         setCuisine(r.cuisine || '');
         setCourse(r.course || '');
-        setFolderId(r.folderId || '');
+        setFolderIds(r.folderIds || []);
         setFinishedPhotoPreview(r.imageUrl || '');
         setIngredients(
           r.ingredients.length > 0
@@ -208,7 +208,7 @@ export default function EditRecipePage() {
         difficulty,
         cuisine: cuisine || undefined,
         course: course || undefined,
-        folderId: folderId || null,
+        folderIds: folderIds.length > 0 ? folderIds : [],
         ingredients: ingredients
           .filter((i) => i.name.trim())
           .map((i) => ({
@@ -289,21 +289,38 @@ export default function EditRecipePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className={labelClass} style={{ color: theme.textMuted }}>
-                Folder
+                Folders
               </label>
-              <select
-                value={folderId}
-                onChange={(e) => setFolderId(e.target.value)}
-                className="w-full px-3 py-2 rounded text-sm outline-none"
-                style={inputStyle}
+              <div
+                className="w-full px-3 py-2 rounded text-sm flex flex-wrap gap-2"
+                style={{ ...inputStyle, minHeight: '38px' }}
               >
-                <option value="">No folder</option>
-                {allFolders.map((f) => (
-                  <option key={f._id} value={f._id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
+                {allFolders.length === 0 && (
+                  <span style={{ color: theme.textMuted }}>No folders available</span>
+                )}
+                {allFolders.map((f) => {
+                  const selected = folderIds.includes(f._id);
+                  return (
+                    <button
+                      key={f._id}
+                      type="button"
+                      onClick={() =>
+                        setFolderIds((prev) =>
+                          selected ? prev.filter((id) => id !== f._id) : [...prev, f._id]
+                        )
+                      }
+                      className="px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                      style={{
+                        background: selected ? theme.buttonBg : theme.card,
+                        color: selected ? theme.buttonText : theme.text,
+                        border: `1px solid ${selected ? theme.buttonBg : theme.border}`,
+                      }}
+                    >
+                      {selected ? '\u2713 ' : ''}{f.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <label className={labelClass} style={{ color: theme.textMuted }}>
