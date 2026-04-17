@@ -157,6 +157,18 @@ export default function RecipeDetailPage() {
   const [showFolderMenu, setShowFolderMenu] = useState(false);
   const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
   const [movingToFolder, setMovingToFolder] = useState(false);
+  const folderMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showFolderMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (folderMenuRef.current && !folderMenuRef.current.contains(e.target as Node)) {
+        setShowFolderMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showFolderMenu]);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -403,7 +415,7 @@ export default function RecipeDetailPage() {
       >
         <button
           onClick={() => downloadRecipeAsPDF(recipe)}
-          className="px-6 py-2 rounded border text-sm font-medium transition-colors"
+          className="px-6 py-2 rounded border text-sm font-medium transition-colors cursor-pointer"
           style={{
             background: theme.buttonBg,
             color: theme.buttonText,
@@ -412,7 +424,7 @@ export default function RecipeDetailPage() {
         >
           Download PDF
         </button>
-        <div className="relative">
+        <div className="relative" ref={folderMenuRef}>
           <button
             onClick={() => setShowFolderMenu(!showFolderMenu)}
             disabled={movingToFolder}
@@ -460,14 +472,14 @@ export default function RecipeDetailPage() {
         </div>
         <button
           onClick={() => navigate(`/recipes/${id}/edit`)}
-          className="px-6 py-2 rounded border text-sm font-medium"
+          className="px-6 py-2 rounded border text-sm font-medium cursor-pointer"
           style={{ color: theme.text, borderColor: theme.border }}
         >
           Edit Recipe
         </button>
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="px-6 py-2 rounded text-sm font-medium text-red-500 border border-red-500/20"
+          className="px-6 py-2 rounded text-sm font-medium text-red-500 border border-red-500/20 cursor-pointer"
         >
           Delete Recipe
         </button>

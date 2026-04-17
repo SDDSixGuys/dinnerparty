@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { importRecipe, listRecipes, type RecipeListItem } from '../api/recipes';
@@ -49,6 +49,22 @@ export default function RecipesPage() {
   const [folderContextMenu, setFolderContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [folderRefresh, setFolderRefresh] = useState(0);
   const refreshFolders = () => setFolderRefresh((n) => n + 1);
+
+  const addMenuRef = useRef<HTMLDivElement>(null);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (showAddMenu && addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
+        setShowAddMenu(false);
+      }
+      if (showFilters && filterMenuRef.current && !filterMenuRef.current.contains(e.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showAddMenu, showFilters]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -216,7 +232,7 @@ export default function RecipesPage() {
           </h1>
 
           {/* Add Button */}
-          <div className="relative">
+          <div className="relative" ref={addMenuRef}>
             <button
               onClick={() => setShowAddMenu(!showAddMenu)}
               className="w-8 h-8 flex items-center justify-center rounded text-lg font-light transition-colors cursor-pointer"
@@ -294,7 +310,7 @@ export default function RecipesPage() {
           </div>
 
           {/* Filter Button */}
-          <div className="relative">
+          <div className="relative" ref={filterMenuRef}>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="px-3 py-1.5 rounded text-sm transition-colors cursor-pointer w-full sm:w-auto"

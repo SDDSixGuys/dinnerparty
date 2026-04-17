@@ -227,7 +227,7 @@ export default function SidebarLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto transition-all duration-300 ease-in-out">
+      <main className={`flex-1 overflow-auto transition-all duration-300 ease-in-out ${isCollapsed ? "pl-14" : ""}`}>
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
