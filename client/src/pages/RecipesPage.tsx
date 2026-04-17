@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { importRecipe, listRecipes, type RecipeListItem } from '../api/recipes';
+import {
+  listFolders,
+  createFolder,
+  updateFolder,
+  deleteFolder,
+  getFolder,
+  type FolderItem,
+} from '../api/folders';
 
 const CUISINE_OPTIONS = ["American", "Mexican", "Italian", "Asian", "Indian", "Mediterranean", "French", "Other"];
 const COURSE_OPTIONS = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert", "Appetizer", "Side Dish", "Other"];
@@ -10,6 +18,9 @@ const DIFFICULTY_OPTIONS = ["easy", "medium", "hard"];
 export default function RecipesPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFolderId = searchParams.get("folderId") || undefined;
+
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importUrl, setImportUrl] = useState('');
@@ -26,11 +37,41 @@ export default function RecipesPage() {
   const [courseFilter, setCourseFilter] = useState<string[]>([]);
   const [maxTimeFilter, setMaxTimeFilter] = useState<number | ''>('');
 
+  // Folder state
+  const [folders, setFolders] = useState<FolderItem[]>([]);
+  const [foldersLoading, setFoldersLoading] = useState(true);
+  const [currentFolder, setCurrentFolder] = useState<FolderItem | null>(null);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editFolderName, setEditFolderName] = useState("");
+  const [folderContextMenu, setFolderContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [folderRefresh, setFolderRefresh] = useState(0);
+  const refreshFolders = () => setFolderRefresh((n) => n + 1);
+
+  const addMenuRef = useRef<HTMLDivElement>(null);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (showAddMenu && addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
+        setShowAddMenu(false);
+      }
+      if (showFilters && filterMenuRef.current && !filterMenuRef.current.contains(e.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showAddMenu, showFilters]);
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Fetch recipes (now includes folderId filter)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -38,6 +79,7 @@ export default function RecipesPage() {
 
     listRecipes({
       ...(debouncedQuery ? { q: debouncedQuery } : {}),
+      ...(activeFolderId ? { folderId: activeFolderId } : {}),
       ...(difficultyFilter.length ? { difficulty: difficultyFilter } : {}),
       ...(cuisineFilter.length ? { cuisine: cuisineFilter } : {}),
       ...(courseFilter.length ? { course: courseFilter } : {}),
@@ -59,7 +101,84 @@ export default function RecipesPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, difficultyFilter, cuisineFilter, courseFilter, maxTimeFilter]);
+  }, [debouncedQuery, activeFolderId, difficultyFilter, cuisineFilter, courseFilter, maxTimeFilter]);
+
+  // Fetch folders for the current level
+  useEffect(() => {
+    setFoldersLoading(true);
+    listFolders(activeFolderId ? { parentId: activeFolderId } : undefined)
+      .then((data) => setFolders(data.folders || []))
+      .catch(() => setFolders([]))
+      .finally(() => setFoldersLoading(false));
+  }, [activeFolderId, folderRefresh]);
+
+  // Fetch current folder info for breadcrumb
+  useEffect(() => {
+    if (activeFolderId) {
+      getFolder(activeFolderId)
+        .then((data) => setCurrentFolder(data.folder))
+        .catch(() => setCurrentFolder(null));
+    } else {
+      setCurrentFolder(null);
+    }
+  }, [activeFolderId]);
+
+  // Close context menu on click elsewhere
+  useEffect(() => {
+    const handler = () => setFolderContextMenu(null);
+    if (folderContextMenu) window.addEventListener("click", handler);
+    return () => window.removeEventListener("click", handler);
+  }, [folderContextMenu]);
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    setCreatingFolder(true);
+    try {
+      await createFolder({ name: newFolderName.trim(), parentId: activeFolderId });
+      setNewFolderName("");
+      setShowNewFolder(false);
+      refreshFolders();
+    } catch {
+      // silently fail
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
+  const handleRenameFolder = async (id: string) => {
+    if (!editFolderName.trim()) {
+      setEditingFolderId(null);
+      return;
+    }
+    try {
+      await updateFolder(id, { name: editFolderName.trim() });
+      setEditingFolderId(null);
+      refreshFolders();
+    } catch {
+      setEditingFolderId(null);
+    }
+  };
+
+  const handleDeleteFolder = async (id: string) => {
+    try {
+      await deleteFolder(id);
+      refreshFolders();
+    } catch {
+      // silently fail
+    }
+  };
+
+  const navigateToFolder = (folderId: string) => {
+    setSearchParams({ folderId });
+  };
+
+  const navigateUp = () => {
+    if (currentFolder?.parentId) {
+      setSearchParams({ folderId: currentFolder.parentId });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +232,7 @@ export default function RecipesPage() {
           </h1>
 
           {/* Add Button */}
-          <div className="relative">
+          <div className="relative" ref={addMenuRef}>
             <button
               onClick={() => setShowAddMenu(!showAddMenu)}
               className="w-8 h-8 flex items-center justify-center rounded text-lg font-light transition-colors cursor-pointer"
@@ -191,7 +310,7 @@ export default function RecipesPage() {
           </div>
 
           {/* Filter Button */}
-          <div className="relative">
+          <div className="relative" ref={filterMenuRef}>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="px-3 py-1.5 rounded text-sm transition-colors cursor-pointer w-full sm:w-auto"
@@ -372,48 +491,244 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {loading ? (
-        <p className="text-sm" style={{ color: theme.textMuted }}>
-          Loading recipes…
-        </p>
-      ) : error ? (
-        <p className="text-sm" style={{ color: "#ef4444" }}>
-          {error}
-        </p>
-      ) : recipes.length === 0 ? (
-        <p className="text-sm" style={{ color: theme.textMuted }}>
-          {debouncedQuery 
-            ? "No recipes found matching your search." 
-            : "No recipes yet. Click + to add your first one."}
-        </p>
-      ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-          {recipes.map((r) => (
-            <button
-              key={r._id}
-              onClick={() => navigate(`/recipes/${r._id}`)}
-              className="text-left rounded-lg p-4 transition-colors cursor-pointer"
-              style={{ background: theme.card, border: `1px solid ${theme.border}` }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = theme.accent;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = theme.border;
-              }}
-            >
-              <div className="text-sm font-medium mb-1" style={{ color: theme.text }}>
-                {r.title}
-              </div>
-              <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
-                {r.description || "—"}
-              </div>
-              <div className="mt-3 text-[11px]" style={{ color: theme.textMuted }}>
-                Updated {new Date(r.updatedAt).toLocaleDateString()}
-              </div>
-            </button>
-          ))}
+      {/* Breadcrumb when inside a folder */}
+      {activeFolderId && currentFolder && (
+        <div className="flex items-center gap-1 mb-4 text-sm">
+          <button
+            onClick={() => setSearchParams({})}
+            className="cursor-pointer hover:underline"
+            style={{ color: theme.accent }}
+          >
+            All Recipes
+          </button>
+          <span style={{ color: theme.textMuted }}>/</span>
+          {currentFolder.parentId && (
+            <>
+              <button
+                onClick={navigateUp}
+                className="cursor-pointer hover:underline"
+                style={{ color: theme.accent }}
+              >
+                ...
+              </button>
+              <span style={{ color: theme.textMuted }}>/</span>
+            </>
+          )}
+          <span style={{ color: theme.text }}>{currentFolder.name}</span>
         </div>
       )}
+
+      {/* Folders Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
+            Folders
+          </h2>
+          <button
+            onClick={() => setShowNewFolder(true)}
+            className="text-xs cursor-pointer transition-colors hover:opacity-70"
+            style={{ color: theme.textMuted }}
+            title="New folder"
+          >
+            + New
+          </button>
+        </div>
+
+        {/* New folder inline input */}
+        {showNewFolder && (
+          <div className="flex items-center gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: theme.textMuted }} className="shrink-0">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <input
+              autoFocus
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateFolder();
+                if (e.key === "Escape") {
+                  setShowNewFolder(false);
+                  setNewFolderName("");
+                }
+              }}
+              onBlur={() => {
+                if (!newFolderName.trim()) {
+                  setShowNewFolder(false);
+                  setNewFolderName("");
+                }
+              }}
+              placeholder="Folder name"
+              disabled={creatingFolder}
+              className="px-2 py-1 rounded text-sm outline-none flex-1"
+              style={{
+                background: theme.card,
+                color: theme.text,
+                border: `1px solid ${theme.accent}`,
+              }}
+            />
+            <button
+              onClick={handleCreateFolder}
+              disabled={creatingFolder || !newFolderName.trim()}
+              className="px-3 py-1 rounded text-xs cursor-pointer disabled:opacity-50"
+              style={{ background: theme.buttonBg, color: theme.buttonText }}
+            >
+              {creatingFolder ? "..." : "Create"}
+            </button>
+            <button
+              onClick={() => { setShowNewFolder(false); setNewFolderName(""); }}
+              className="px-2 py-1 text-xs cursor-pointer"
+              style={{ color: theme.textMuted }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {foldersLoading ? (
+          <p className="text-xs" style={{ color: theme.textMuted }}>Loading folders...</p>
+        ) : folders.length === 0 && !showNewFolder ? (
+          <p className="text-xs" style={{ color: theme.textMuted }}>
+            {activeFolderId ? "No subfolders" : "No folders yet"}
+          </p>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+            {folders.map((folder) => {
+              const isEditing = editingFolderId === folder._id;
+              return (
+                <button
+                  key={folder._id}
+                  onClick={() => { if (!isEditing) navigateToFolder(folder._id); }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setFolderContextMenu({ id: folder._id, x: e.clientX, y: e.clientY });
+                  }}
+                  className="text-left rounded-lg p-3 transition-colors cursor-pointer flex items-center gap-3"
+                  style={{ background: theme.card, border: `1px solid ${theme.border}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={folder.color || theme.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      value={editFolderName}
+                      onChange={(e) => setEditFolderName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRenameFolder(folder._id);
+                        if (e.key === "Escape") setEditingFolderId(null);
+                      }}
+                      onBlur={() => handleRenameFolder(folder._id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 bg-transparent outline-none text-sm px-1 rounded min-w-0"
+                      style={{ color: theme.text, border: `1px solid ${theme.accent}` }}
+                    />
+                  ) : (
+                    <span className="text-sm truncate" style={{ color: theme.text }}>
+                      {folder.name}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Folder context menu */}
+      {folderContextMenu && (
+        <div
+          className="fixed z-50 rounded shadow-lg py-1 min-w-[120px]"
+          style={{
+            left: folderContextMenu.x,
+            top: folderContextMenu.y,
+            background: theme.card,
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <button
+            onClick={() => {
+              const folder = folders.find((f) => f._id === folderContextMenu.id);
+              if (folder) {
+                setEditingFolderId(folder._id);
+                setEditFolderName(folder.name);
+              }
+              setFolderContextMenu(null);
+            }}
+            className="w-full text-left px-3 py-1.5 text-sm transition-colors cursor-pointer"
+            style={{ color: theme.text }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = theme.sidebarHover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            Rename
+          </button>
+          <button
+            onClick={() => {
+              handleDeleteFolder(folderContextMenu.id);
+              setFolderContextMenu(null);
+            }}
+            className="w-full text-left px-3 py-1.5 text-sm transition-colors cursor-pointer"
+            style={{ color: "#ef4444" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = theme.sidebarHover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
+      {/* Recipes Section */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: theme.textMuted }}>
+          Recipes
+        </h2>
+
+        {loading ? (
+          <p className="text-sm" style={{ color: theme.textMuted }}>
+            Loading recipes...
+          </p>
+        ) : error ? (
+          <p className="text-sm" style={{ color: "#ef4444" }}>
+            {error}
+          </p>
+        ) : recipes.length === 0 ? (
+          <p className="text-sm" style={{ color: theme.textMuted }}>
+            {debouncedQuery
+              ? "No recipes found matching your search."
+              : activeFolderId
+                ? "No recipes in this folder."
+                : "No recipes yet. Click + to add your first one."}
+          </p>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+            {recipes.map((r) => (
+              <button
+                key={r._id}
+                onClick={() => navigate(`/recipes/${r._id}`)}
+                className="text-left rounded-lg p-4 transition-colors cursor-pointer"
+                style={{ background: theme.card, border: `1px solid ${theme.border}` }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.accent;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.border;
+                }}
+              >
+                <div className="text-sm font-medium mb-1" style={{ color: theme.text }}>
+                  {r.title}
+                </div>
+                <div className="text-xs line-clamp-2" style={{ color: theme.textMuted }}>
+                  {r.description || "—"}
+                </div>
+                <div className="mt-3 text-[11px]" style={{ color: theme.textMuted }}>
+                  Updated {new Date(r.updatedAt).toLocaleDateString()}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

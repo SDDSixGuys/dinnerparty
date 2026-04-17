@@ -90,12 +90,13 @@ const recipeSchema = new Schema(
       },
     ],
 
-    // Folder placement
-    folderId: {
-      type: Schema.Types.ObjectId,
-      ref: "Folder",
-      index: true,
-    },
+    // Folder placement (supports multiple folders)
+    folderIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Folder",
+      },
+    ],
 
     // Source tracking
     sourceUrl: { type: String, trim: true },
@@ -137,7 +138,7 @@ const recipeSchema = new Schema(
 
 // Compound indexes for common query patterns
 recipeSchema.index({ userId: 1, title: 1 });
-recipeSchema.index({ userId: 1, folderId: 1 });
+recipeSchema.index({ userId: 1, folderIds: 1 });
 recipeSchema.index({ userId: 1, tags: 1 });
 recipeSchema.index({ userId: 1, isFavorite: 1 });
 
@@ -203,7 +204,7 @@ export interface IRecipe extends Document {
   course?: string;
   difficulty: "easy" | "medium" | "hard";
   tags: mongoose.Types.ObjectId[];
-  folderId?: mongoose.Types.ObjectId;
+  folderIds: mongoose.Types.ObjectId[];
   sourceUrl?: string;
   sourceType: "manual" | "url_import" | "shared_copy";
   sharedFromUserId?: mongoose.Types.ObjectId;

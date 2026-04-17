@@ -16,7 +16,7 @@ export class RecipeRepository {
   async findByFilters(filters: RecipeFilters): Promise<IRecipe[]> {
     const query: Record<string, any> = { userId: filters.userId };
 
-    if (filters.folderId) query.folderId = filters.folderId;
+    if (filters.folderId) query.folderIds = filters.folderId;
     if (filters.tagId) query.tags = filters.tagId;
     if (typeof filters.isFavorite === 'boolean') query.isFavorite = filters.isFavorite;
     if (filters.q?.trim()) {
