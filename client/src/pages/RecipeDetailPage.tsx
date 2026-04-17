@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
-import { deleteRecipe, getRecipe, type RecipeDetail } from "../api/recipes";
+import { deleteRecipe, getRecipe, updateRecipe, type RecipeDetail } from "../api/recipes";
 import { downloadRecipeAsPDF } from "../utils/pdfGenerator";
+import { listFolders, type FolderItem } from "../api/folders";
 
 /* --- Helper Component for Step Timers --- */
 function StepTimer({ minutes, theme }: { minutes: number; theme: any }) {
@@ -153,6 +154,9 @@ export default function RecipeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFolderMenu, setShowFolderMenu] = useState(false);
+  const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
+  const [movingToFolder, setMovingToFolder] = useState(false);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -161,6 +165,26 @@ export default function RecipeDetailPage() {
       navigate("/recipes"); // Redirect to list after deletion
     } catch (err) {
       alert("Failed to delete recipe");
+    }
+  };
+
+  useEffect(() => {
+    listFolders()
+      .then((data) => setAllFolders(data.folders || []))
+      .catch(() => setAllFolders([]));
+  }, []);
+
+  const handleMoveToFolder = async (folderId: string | null) => {
+    if (!id) return;
+    setMovingToFolder(true);
+    try {
+      await updateRecipe(id, { folderId: folderId || null });
+      setRecipe((prev: any) => prev ? { ...prev, folderId: folderId || undefined } : prev);
+      setShowFolderMenu(false);
+    } catch {
+      // silently fail
+    } finally {
+      setMovingToFolder(false);
     }
   };
 
@@ -384,8 +408,61 @@ export default function RecipeDetailPage() {
         >
           Download PDF
         </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowFolderMenu(!showFolderMenu)}
+            disabled={movingToFolder}
+            className="px-6 py-2 rounded border text-sm font-medium transition-colors cursor-pointer"
+            style={{ color: theme.text, borderColor: showFolderMenu ? theme.accent : theme.border }}
+          >
+            {recipe.folderId
+              ? `Folder: ${allFolders.find((f) => f._id === recipe.folderId)?.name || "..."}`
+              : "Add to Folder"}
+          </button>
+          {showFolderMenu && (
+            <div
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 rounded shadow-lg py-1 z-10"
+              style={{ background: theme.card, border: `1px solid ${theme.border}` }}
+            >
+              {recipe.folderId && (
+                <button
+                  onClick={() => handleMoveToFolder(null)}
+                  className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer"
+                  style={{ color: theme.textMuted }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = theme.sidebarHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  Remove from folder
+                </button>
+              )}
+              {allFolders.map((f) => (
+                <button
+                  key={f._id}
+                  onClick={() => handleMoveToFolder(f._id)}
+                  className="w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer flex items-center gap-2"
+                  style={{
+                    color: f._id === recipe.folderId ? theme.accent : theme.text,
+                    fontWeight: f._id === recipe.folderId ? 600 : 400,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = theme.sidebarHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={f.color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                  {f.name}
+                </button>
+              ))}
+              {allFolders.length === 0 && (
+                <p className="px-4 py-2 text-xs" style={{ color: theme.textMuted }}>
+                  No folders yet
+                </p>
+              )}
+            </div>
+          )}
+        </div>
         <button
-          onClick={() => navigate(`/recipes/${id}/edit`)} // id comes from useParams
+          onClick={() => navigate(`/recipes/${id}/edit`)}
           className="px-6 py-2 rounded border text-sm font-medium"
           style={{ color: theme.text, borderColor: theme.border }}
         >

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { getRecipe, updateRecipe } from "../api/recipes";
+import { listFolders, type FolderItem } from "../api/folders";
 
 interface Ingredient {
   name: string;
@@ -30,12 +31,20 @@ export default function EditRecipePage() {
   const [difficulty, setDifficulty] = useState("medium");
   const [cuisine, setCuisine] = useState("");
   const [course, setCourse] = useState("");
+  const [folderId, setFolderId] = useState("");
+  const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    listFolders()
+      .then((data) => setAllFolders(data.folders || []))
+      .catch(() => setAllFolders([]));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -50,6 +59,7 @@ export default function EditRecipePage() {
         setDifficulty(r.difficulty || 'medium');
         setCuisine(r.cuisine || '');
         setCourse(r.course || '');
+        setFolderId(r.folderId || '');
         setFinishedPhotoPreview(r.imageUrl || '');
         setIngredients(
           r.ingredients.length > 0
@@ -198,6 +208,7 @@ export default function EditRecipePage() {
         difficulty,
         cuisine: cuisine || undefined,
         course: course || undefined,
+        folderId: folderId || null,
         ingredients: ingredients
           .filter((i) => i.name.trim())
           .map((i) => ({
@@ -276,6 +287,24 @@ export default function EditRecipePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className={labelClass} style={{ color: theme.textMuted }}>
+                Folder
+              </label>
+              <select
+                value={folderId}
+                onChange={(e) => setFolderId(e.target.value)}
+                className="w-full px-3 py-2 rounded text-sm outline-none"
+                style={inputStyle}
+              >
+                <option value="">No folder</option>
+                {allFolders.map((f) => (
+                  <option key={f._id} value={f._id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className={labelClass} style={{ color: theme.textMuted }}>
                 Cuisine
