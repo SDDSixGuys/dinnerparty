@@ -48,15 +48,21 @@ export class AuthController {
   };
 
   logout = (_req: Request, res: Response): void => {
-    res.clearCookie('token');
+    const isProduction = env.NODE_ENV === 'production';
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+    });
     res.json({ message: 'Logged out' });
   };
 
   private setAuthCookie(res: Response, token: string): void {
+    const isProduction = env.NODE_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
