@@ -1,6 +1,9 @@
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export class HttpClient {
   async json<T>(input: RequestInfo | URL, init: RequestInit = {}): Promise<T> {
-    const res = await fetch(input, {
+    const url = typeof input === 'string' && input.startsWith('/') ? `${API_BASE}${input}` : input;
+    const res = await fetch(url, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
