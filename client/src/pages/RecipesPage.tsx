@@ -106,7 +106,7 @@ export default function RecipesPage() {
   // Fetch folders for the current level
   useEffect(() => {
     setFoldersLoading(true);
-    listFolders(activeFolderId ? { parentId: activeFolderId } : undefined)
+    listFolders({ parentId: activeFolderId || 'root' })
       .then((data) => setFolders(data.folders || []))
       .catch(() => setFolders([]))
       .finally(() => setFoldersLoading(false));
