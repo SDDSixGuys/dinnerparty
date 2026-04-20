@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 import { useAuth } from "../App";
 import { useTheme } from "../ThemeContext";
 import DashboardPage from "../pages/DashboardPage";
@@ -25,7 +27,7 @@ export default function SidebarLayout() {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     navigate("/");
   };
