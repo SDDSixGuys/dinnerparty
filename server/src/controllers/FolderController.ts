@@ -7,7 +7,8 @@ export class FolderController {
   list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.userId;
-      const parentId = req.query.parentId as string | undefined;
+      const rawParentId = req.query.parentId as string | undefined;
+      const parentId = rawParentId === 'root' ? null : rawParentId;
 
       const folders = await this.folderService.list({
         userId,
