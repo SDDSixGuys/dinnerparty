@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { createRecipe } from "../api/recipes";
 import { listFolders, type FolderItem } from "../api/folders";
+import { fileToBase64 } from "../utils/imageUtils";
 
 interface Ingredient {
   name: string;
@@ -119,14 +120,6 @@ export default function CreateRecipePage() {
     setFinishedPhoto(file);
     setFinishedPhotoPreview(file ? URL.createObjectURL(file) : "");
   };
-
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

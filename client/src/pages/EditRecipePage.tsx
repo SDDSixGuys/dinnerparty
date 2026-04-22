@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { getRecipe, updateRecipe } from "../api/recipes";
 import { listFolders, type FolderItem } from "../api/folders";
+import { fileToBase64 } from "../utils/imageUtils";
 
 interface Ingredient {
   name: string;
@@ -150,14 +151,6 @@ export default function EditRecipePage() {
 
   const [finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
   const [finishedPhotoPreview, setFinishedPhotoPreview] = useState('');
-
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
 
   const handleFinishedPhoto = (file: File | null) => {
     if (finishedPhotoPreview && !finishedPhotoPreview.startsWith('data:')) URL.revokeObjectURL(finishedPhotoPreview);
