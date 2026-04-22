@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { ThemeProvider, useTheme } from "./ThemeContext";
+import { TimerProvider } from "./TimerContext";
 import SidebarLayout from "./components/SidebarLayout";
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -230,9 +231,11 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <TimerProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </TimerProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
