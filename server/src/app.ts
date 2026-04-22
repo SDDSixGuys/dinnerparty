@@ -1,21 +1,22 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import { env } from './config/env';
-import authRoutes from './routes/auth.routes';
-import recipeRoutes from './routes/recipes.routes';
-import folderRoutes from './routes/folders.routes';
-import { errorHandler } from './middleware/error.middleware';
+import path from "path";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import { env } from "./config/env";
+import authRoutes from "./routes/auth.routes";
+import recipeRoutes from "./routes/recipes.routes";
+import folderRoutes from "./routes/folders.routes";
+import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
-app.use(morgan('dev'));
-app.use(express.json({ limit: '20mb' }));
+app.use(morgan("dev"));
+app.use(express.json({ limit: "20mb" }));
 app.use(cookieParser());
 
 // Health check
@@ -32,5 +33,14 @@ app.use("/api/folders", folderRoutes);
 
 // Centralized error handling (must be last)
 app.use(errorHandler);
+
+// Serve React client in production
+if (env.NODE_ENV === "production") {
+  const clientDist = path.join(__dirname, "../../client/dist");
+  app.use(express.static(clientDist));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 export default app;
