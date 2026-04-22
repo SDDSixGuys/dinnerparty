@@ -1,74 +1,19 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
+import { useTimers } from "../TimerContext";
 import { deleteRecipe, getRecipe, updateRecipe, type RecipeDetail } from "../api/recipes";
 import { downloadRecipeAsPDF } from "../utils/pdfGenerator";
 import { listFolders, type FolderItem } from "../api/folders";
 
 /* --- Helper Component for Step Timers --- */
-function StepTimer({ minutes, theme }: { minutes: number; theme: any }) {
-  const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [isAlarming, setIsAlarming] = useState(false);
+function StepTimer({ timerId, label, minutes, theme }: { timerId: string; label: string; minutes: number; theme: any }) {
+  const { timers, startTimer, toggleTimer, resetTimer } = useTimers();
+  const existing = timers.find((t) => t.id === timerId);
 
-  // Use useRef for Audio to prevent "value cannot be modified" lint error
-  const audioRef = useRef(new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"));
-  const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const alarmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const beepCountRef = useRef(0);
-
-  const stopAlarm = useCallback(() => {
-      if (audioIntervalRef.current) {
-        clearInterval(audioIntervalRef.current);
-        audioIntervalRef.current = null;
-      }
-      if (alarmTimeoutRef.current) {
-        clearTimeout(alarmTimeoutRef.current);
-        alarmTimeoutRef.current = null;
-      }
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsAlarming(false);
-  }, []);
-
-  useEffect(() => {
-      let timerInterval: ReturnType<typeof setInterval> | null = null;
-
-      if (isActive && secondsLeft > 0) {
-        timerInterval = setInterval(() => {
-          setSecondsLeft((s) => s - 1);
-        }, 1000);
-      } else if (secondsLeft === 0 && isActive) {
-        setIsActive(false);
-        setIsAlarming(true);
-        beepCountRef.current = 0;
-
-        const playBeep = () => {
-          const positionInCycle = beepCountRef.current % 4;
-          if (positionInCycle < 3) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-          }
-          beepCountRef.current += 1;
-        };
-
-        playBeep();
-        audioIntervalRef.current = setInterval(playBeep, 200);
-        alarmTimeoutRef.current = setTimeout(() => {
-          stopAlarm();
-        }, 60000);
-      }
-
-      return () => {
-        if (timerInterval) clearInterval(timerInterval);
-      };
-  }, [isActive, secondsLeft, stopAlarm]);
-
-  const handleReset = () => {
-    stopAlarm();
-    setSecondsLeft(minutes * 60);
-    setIsActive(false);
-  };
+  const secondsLeft = existing?.secondsLeft ?? minutes * 60;
+  const isActive = existing?.isActive ?? false;
+  const isStarted = !!existing;
 
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -77,71 +22,44 @@ function StepTimer({ minutes, theme }: { minutes: number; theme: any }) {
   };
 
   return (
-    <>
-      {/* --- Classy Minimalist Overlay --- */}
-      {isAlarming && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-md">
-          <div
-            className="w-full max-w-sm p-10 rounded-xl shadow-2xl text-center"
-            style={{ background: theme.card, border: `1px solid ${theme.border}` }}
-          >
-            <h2 className="text-xl font-medium mb-2" style={{ color: theme.text }}>
-              Timer Complete
-            </h2>
-            <p className="text-sm mb-8" style={{ color: theme.textMuted }}>
-              The current step duration has finished.
-            </p>
-            <button
-              onClick={() => stopAlarm()}
-              className="w-full py-3 rounded-lg font-semibold tracking-wide transition-all active:scale-95"
-              style={{ background: theme.buttonBg, color: theme.buttonText }}
-            >
-              DISMISS
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* --- Timer UI --- */}
-      <div className="mt-4 flex items-center gap-4">
-        <div
-          className="px-4 py-2 rounded-md font-mono text-sm border transition-colors"
-          style={{
-            background: secondsLeft === 0 ? theme.card : theme.bg,
-            color: secondsLeft === 0 ? "#ef4444" : theme.text,
-            borderColor: secondsLeft === 0 ? "#ef4444" : theme.border,
-          }}
-        >
-          {formatTime(secondsLeft)}
-        </div>
-
-        <button
-          onClick={() => {
-            if (isAlarming) stopAlarm();
-            else if (secondsLeft === 0) handleReset();
-            else setIsActive(!isActive);
-          }}
-          className="text-xs px-5 py-2 rounded-md font-medium transition-all cursor-pointer border"
-          style={{
-            background: isActive ? "transparent" : theme.buttonBg,
-            color: isActive ? theme.text : theme.buttonText,
-            borderColor: isActive ? theme.border : "transparent",
-          }}
-        >
-          {isActive ? "Stop" : secondsLeft === 0 ? "Reset" : "Start Timer"}
-        </button>
-
-        {secondsLeft < minutes * 60 && !isAlarming && (
-          <button
-            onClick={handleReset}
-            className="text-xs font-medium opacity-60 hover:opacity-100 cursor-pointer"
-            style={{ color: theme.text }}
-          >
-            Reset
-          </button>
-        )}
+    <div className="mt-4 flex items-center gap-4">
+      <div
+        className="px-4 py-2 rounded-md font-mono text-sm border transition-colors"
+        style={{
+          background: secondsLeft === 0 ? theme.card : theme.bg,
+          color: secondsLeft === 0 ? "#ef4444" : theme.text,
+          borderColor: secondsLeft === 0 ? "#ef4444" : theme.border,
+        }}
+      >
+        {formatTime(secondsLeft)}
       </div>
-    </>
+
+      <button
+        onClick={() => {
+          if (!isStarted) startTimer(timerId, label, minutes);
+          else if (secondsLeft === 0) resetTimer(timerId);
+          else toggleTimer(timerId);
+        }}
+        className="text-xs px-5 py-2 rounded-md font-medium transition-all cursor-pointer border"
+        style={{
+          background: isActive ? "transparent" : theme.buttonBg,
+          color: isActive ? theme.text : theme.buttonText,
+          borderColor: isActive ? theme.border : "transparent",
+        }}
+      >
+        {isActive ? "Stop" : secondsLeft === 0 ? "Reset" : "Start Timer"}
+      </button>
+
+      {isStarted && secondsLeft < minutes * 60 && secondsLeft > 0 && (
+        <button
+          onClick={() => resetTimer(timerId)}
+          className="text-xs font-medium opacity-60 hover:opacity-100 cursor-pointer"
+          style={{ color: theme.text }}
+        >
+          Reset
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -385,7 +303,7 @@ export default function RecipeDetailPage() {
                         {s.text}
                       </p>
 
-                      {s.timerMinutes > 0 && <StepTimer minutes={s.timerMinutes} theme={theme} />}
+                      {s.timerMinutes > 0 && <StepTimer timerId={`${id}-step-${s.stepNumber}`} label={`Step ${s.stepNumber} — ${recipe.title}`} minutes={s.timerMinutes} theme={theme} />}
                     </div>
 
                     {s.imageUrl && (
