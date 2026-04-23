@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { getRecipe, updateRecipe } from "../api/recipes";
 import { listFolders, type FolderItem } from "../api/folders";
+import { listTags, createTag, type TagItem } from "../api/tags";
 import { fileToBase64 } from "../utils/imageUtils";
 
 interface Ingredient {
@@ -34,6 +35,10 @@ export default function EditRecipePage() {
   const [course, setCourse] = useState("");
   const [folderIds, setFolderIds] = useState<string[]>([]);
   const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<TagItem[]>([]);
+  const [newTagName, setNewTagName] = useState("");
+  const [creatingTag, setCreatingTag] = useState(false);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
 
@@ -45,7 +50,26 @@ export default function EditRecipePage() {
     listFolders()
       .then((data) => setAllFolders(data.folders || []))
       .catch(() => setAllFolders([]));
+    listTags()
+      .then((data) => setAllTags(data.tags || []))
+      .catch(() => setAllTags([]));
   }, []);
+
+  const handleCreateTag = async () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    setCreatingTag(true);
+    try {
+      const { tag } = await createTag({ name });
+      setAllTags((prev) => [...prev, tag]);
+      setTagIds((prev) => [...prev, tag._id]);
+      setNewTagName("");
+    } catch {
+      // silently fail
+    } finally {
+      setCreatingTag(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +85,7 @@ export default function EditRecipePage() {
         setCuisine(r.cuisine || '');
         setCourse(r.course || '');
         setFolderIds(r.folderIds || []);
+        setTagIds(r.tags || []);
         setFinishedPhotoPreview(r.imageUrl || '');
         setIngredients(
           r.ingredients.length > 0
@@ -202,6 +227,7 @@ export default function EditRecipePage() {
         cuisine: cuisine || undefined,
         course: course || undefined,
         folderIds: folderIds.length > 0 ? folderIds : [],
+        tags: tagIds.length > 0 ? tagIds : [],
         ingredients: ingredients
           .filter((i) => i.name.trim())
           .map((i) => ({
@@ -313,6 +339,58 @@ export default function EditRecipePage() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+            <div className="col-span-2">
+              <label className={labelClass} style={{ color: theme.textMuted }}>
+                Tags
+              </label>
+              <div
+                className="w-full px-3 py-2 rounded text-sm flex flex-wrap gap-2"
+                style={{ ...inputStyle, minHeight: '38px' }}
+              >
+                {allTags.map((t) => {
+                  const selected = tagIds.includes(t._id);
+                  return (
+                    <button
+                      key={t._id}
+                      type="button"
+                      onClick={() =>
+                        setTagIds((prev) =>
+                          selected ? prev.filter((id) => id !== t._id) : [...prev, t._id]
+                        )
+                      }
+                      className="px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                      style={{
+                        background: selected ? (t.color || theme.buttonBg) : theme.card,
+                        color: selected ? '#fff' : theme.text,
+                        border: `1px solid ${selected ? (t.color || theme.buttonBg) : theme.border}`,
+                      }}
+                    >
+                      {selected ? '\u2713 ' : ''}{t.name}
+                    </button>
+                  );
+                })}
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateTag(); } }}
+                    placeholder="New tag..."
+                    className="px-2 py-1 rounded text-xs outline-none w-24"
+                    style={{ background: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateTag}
+                    disabled={creatingTag || !newTagName.trim()}
+                    className="text-xs px-2 py-1 rounded cursor-pointer disabled:opacity-40"
+                    style={{ background: theme.buttonBg, color: theme.buttonText }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
             <div>

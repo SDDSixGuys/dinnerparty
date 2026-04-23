@@ -5,6 +5,7 @@ import { useTimers } from "../TimerContext";
 import { deleteRecipe, getRecipe, updateRecipe, type RecipeDetail } from "../api/recipes";
 import { downloadRecipeAsPDF } from "../utils/pdfGenerator";
 import { listFolders, type FolderItem } from "../api/folders";
+import { listTags, type TagItem } from "../api/tags";
 
 /* --- Helper Component for Step Timers --- */
 function StepTimer({ timerId, label, minutes, theme }: { timerId: string; label: string; minutes: number; theme: any }) {
@@ -74,6 +75,7 @@ export default function RecipeDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFolderMenu, setShowFolderMenu] = useState(false);
   const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
+  const [allTags, setAllTags] = useState<TagItem[]>([]);
   const [movingToFolder, setMovingToFolder] = useState(false);
   const folderMenuRef = useRef<HTMLDivElement>(null);
 
@@ -102,6 +104,9 @@ export default function RecipeDetailPage() {
     listFolders()
       .then((data) => setAllFolders(data.folders || []))
       .catch(() => setAllFolders([]));
+    listTags()
+      .then((data) => setAllTags(data.tags || []))
+      .catch(() => setAllTags([]));
   }, []);
 
   const handleToggleFolder = async (folderId: string) => {
@@ -229,6 +234,27 @@ export default function RecipeDetailPage() {
             </>
           )}
         </div>
+
+        {recipe.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {recipe.tags.map((tagId: string) => {
+              const tag = allTags.find((t) => t._id === tagId);
+              if (!tag) return null;
+              return (
+                <span
+                  key={tagId}
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    background: tag.color || '#808080',
+                    color: '#fff',
+                  }}
+                >
+                  {tag.name}
+                </span>
+              );
+            })}
+          </div>
+        )}
 
         {recipe.description && (
           <p className="text-base md:text-lg mb-8 leading-relaxed" style={{ color: theme.text }}>

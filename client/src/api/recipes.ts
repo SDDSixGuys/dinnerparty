@@ -12,6 +12,7 @@ export interface RecipeListItem {
 
 export interface RecipeDetail extends RecipeListItem {
   folderIds?: string[];
+  tags?: string[];
   ingredients: Array<{
     name: string;
     quantity?: number;
