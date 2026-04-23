@@ -58,6 +58,11 @@ export class RecipeService {
 
     const html = await pageRes.text();
 
+    // Extract og:image before stripping HTML — most recipe sites have this
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    const ogImage = ogImageMatch?.[1] || '';
+
     const plainText = html
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -121,6 +126,11 @@ ${plainText}`
 
     if (!parsed.title) {
       throw new ValidationError('Could not extract a recipe from this page');
+    }
+
+    // Prefer og:image over Gemini's guess — it's always more reliable
+    if (ogImage) {
+      parsed.imageUrl = ogImage;
     }
 
     return this.recipeRepository.create(
