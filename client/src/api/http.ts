@@ -1,12 +1,15 @@
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 export class HttpClient {
   async json<T>(input: RequestInfo | URL, init: RequestInit = {}): Promise<T> {
-    const res = await fetch(input, {
+    const url = typeof input === "string" && input.startsWith("/") ? `${API_BASE}${input}` : input;
+    const res = await fetch(url, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(init.headers || {}),
       },
-      credentials: 'include',
+      credentials: "include",
     });
 
     const text = await res.text();
@@ -18,15 +21,13 @@ export class HttpClient {
     try {
       data = JSON.parse(text);
     } catch {
-      const preview = text.slice(0, 200).replace(/\s+/g, ' ');
+      const preview = text.slice(0, 200).replace(/\s+/g, " ");
       throw new Error(`Expected JSON but got: ${preview}`);
     }
 
     if (!res.ok) {
-      const message =
-        (data as any)?.error ||
-        (data as any)?.message ||
-        `Request failed (${res.status})`;
+      const errData = data as { error?: string; message?: string };
+      const message = errData?.error || errData?.message || `Request failed (${res.status})`;
       throw new Error(message);
     }
 
@@ -37,9 +38,6 @@ export class HttpClient {
 export const httpClient = new HttpClient();
 
 // Backward-compatible standalone export
-export async function apiJson<T>(
-  input: RequestInfo | URL,
-  init: RequestInit = {}
-): Promise<T> {
+export async function apiJson<T>(input: RequestInfo | URL, init: RequestInit = {}): Promise<T> {
   return httpClient.json<T>(input, init);
 }

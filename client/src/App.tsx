@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { ThemeProvider, useTheme } from "./ThemeContext";
+import { TimerProvider } from "./TimerContext";
 import SidebarLayout from "./components/SidebarLayout";
+
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 // --- Auth Context ---
 
@@ -23,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -32,7 +36,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setUser(data.user);
@@ -70,7 +74,7 @@ function HomePage() {
     e.preventDefault();
     setError("");
 
-    const endpoint = isRegistering ? "/api/auth/register" : "/api/auth/login";
+    const endpoint = isRegistering ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
     const body = isRegistering ? { email, username, password } : { email, password };
 
     try {
@@ -228,9 +232,11 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <TimerProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </TimerProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

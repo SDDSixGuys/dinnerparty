@@ -1,4 +1,4 @@
-import { HttpClient, httpClient } from './http';
+import { HttpClient, httpClient } from "./http";
 
 export interface RecipeListItem {
   _id: string;
@@ -11,6 +11,7 @@ export interface RecipeListItem {
 }
 
 export interface RecipeDetail extends RecipeListItem {
+  folderIds?: string[];
   ingredients: Array<{
     name: string;
     quantity?: number;
@@ -43,14 +44,28 @@ export class RecipeApiClient {
     this.http = http;
   }
 
-  list(params?: { q?: string; folderId?: string; tagId?: string; isFavorite?: boolean }) {
+  list(params?: {
+    q?: string;
+    folderId?: string;
+    tagId?: string;
+    isFavorite?: boolean;
+    difficulty?: string[];
+    cuisine?: string[];
+    course?: string[];
+    maxTotalTime?: number;
+  }) {
     const qs = new URLSearchParams();
-    if (params?.q) qs.set('q', params.q);
-    if (params?.folderId) qs.set('folderId', params.folderId);
-    if (params?.tagId) qs.set('tagId', params.tagId);
-    if (typeof params?.isFavorite === 'boolean') qs.set('isFavorite', String(params.isFavorite));
+    if (params?.q) qs.set("q", params.q);
+    if (params?.folderId) qs.set("folderId", params.folderId);
+    if (params?.tagId) qs.set("tagId", params.tagId);
+    if (typeof params?.isFavorite === "boolean") qs.set("isFavorite", String(params.isFavorite));
 
-    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    if (params?.difficulty?.length) qs.set("difficulty", params.difficulty.join(","));
+    if (params?.cuisine?.length) qs.set("cuisine", params.cuisine.join(","));
+    if (params?.course?.length) qs.set("course", params.course.join(","));
+    if (params?.maxTotalTime !== undefined) qs.set("maxTotalTime", String(params.maxTotalTime));
+
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
     return this.http.json<{ recipes: RecipeListItem[] }>(`/api/recipes${suffix}`);
   }
 
@@ -58,30 +73,30 @@ export class RecipeApiClient {
     return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/${id}`);
   }
 
-  create(payload: any) {
+  create(payload: unknown) {
     return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload),
     });
   }
 
-  import(payload: any) {
+  import(payload: unknown) {
     return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/import`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload),
     });
   }
 
-  update(id: string, data: any) {
+  update(id: string, data: unknown) {
     return this.http.json<{ recipe: RecipeDetail }>(`/api/recipes/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(data),
     });
   }
 
   delete(id: string) {
     return this.http.json<{ message: string }>(`/api/recipes/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 }
@@ -94,14 +109,18 @@ export const listRecipes = (params?: {
   folderId?: string;
   tagId?: string;
   isFavorite?: boolean;
+  difficulty?: string[];
+  cuisine?: string[];
+  course?: string[];
+  maxTotalTime?: number;
 }) => recipeApiClient.list(params);
 
 export const getRecipe = (id: string) => recipeApiClient.get(id);
 
-export const createRecipe = (payload: any) => recipeApiClient.create(payload);
+export const createRecipe = (payload: unknown) => recipeApiClient.create(payload);
 
-export const importRecipe = (payload: any) => recipeApiClient.import(payload);
+export const importRecipe = (payload: unknown) => recipeApiClient.import(payload);
 
-export const updateRecipe = (id: string, data: any) => recipeApiClient.update(id, data);
+export const updateRecipe = (id: string, data: unknown) => recipeApiClient.update(id, data);
 
 export const deleteRecipe = (id: string) => recipeApiClient.delete(id);

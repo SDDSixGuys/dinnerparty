@@ -10,6 +10,8 @@ import SettingsPage from "../pages/SettingsPage";
 import ProfilePage from "../pages/ProfilePage";
 import EditRecipePage from "../pages/EditRecipePage";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const IconHome = () => (
   <svg
     width="20"
@@ -90,7 +92,7 @@ export default function SidebarLayout() {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     navigate("/");
   };

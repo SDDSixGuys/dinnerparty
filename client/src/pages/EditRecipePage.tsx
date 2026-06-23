@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { getRecipe, updateRecipe } from "../api/recipes";
+import { listFolders, type FolderItem } from "../api/folders";
 
 interface Ingredient {
   name: string;
@@ -62,6 +63,8 @@ export default function EditRecipePage() {
   const [difficulty, setDifficulty] = useState("medium");
   const [cuisine, setCuisine] = useState("");
   const [course, setCourse] = useState("");
+  const [folderIds, setFolderIds] = useState<string[]>([]);
+  const [allFolders, setAllFolders] = useState<FolderItem[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
   const [finishedPhoto, setFinishedPhoto] = useState<File | null>(null);
@@ -70,6 +73,12 @@ export default function EditRecipePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    listFolders()
+      .then((data) => setAllFolders(data.folders || []))
+      .catch(() => setAllFolders([]));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -84,6 +93,7 @@ export default function EditRecipePage() {
         setDifficulty(r.difficulty || "medium");
         setCuisine(r.cuisine || "");
         setCourse(r.course || "");
+        setFolderIds(r.folderIds || []);
         setFinishedPhotoPreview(r.imageUrl || "");
         setIngredients(
           r.ingredients.length > 0
@@ -232,6 +242,7 @@ export default function EditRecipePage() {
         difficulty,
         cuisine: cuisine || undefined,
         course: course || undefined,
+        folderIds: folderIds.length > 0 ? folderIds : [],
         ingredients: ingredients
           .filter((i) => i.name.trim())
           .map((i) => ({
@@ -393,6 +404,43 @@ export default function EditRecipePage() {
                   />
                 </div>
               </div>
+
+              {/* Folders */}
+              {allFolders.length > 0 && (
+                <div>
+                  <label className={labelClass} style={{ color: theme.textMuted }}>
+                    Folders
+                  </label>
+                  <div
+                    className="flex flex-wrap gap-2 px-3 py-2 rounded-lg"
+                    style={{ ...inputStyle, minHeight: "42px" }}
+                  >
+                    {allFolders.map((f) => {
+                      const selected = folderIds.includes(f._id);
+                      return (
+                        <button
+                          key={f._id}
+                          type="button"
+                          onClick={() =>
+                            setFolderIds((prev) =>
+                              selected ? prev.filter((fid) => fid !== f._id) : [...prev, f._id]
+                            )
+                          }
+                          className="px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                          style={{
+                            background: selected ? theme.buttonBg : theme.card,
+                            color: selected ? theme.buttonText : theme.text,
+                            border: `1px solid ${selected ? theme.buttonBg : theme.border}`,
+                          }}
+                        >
+                          {selected ? "✓ " : ""}
+                          {f.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className={labelClass} style={{ color: theme.textMuted }}>
