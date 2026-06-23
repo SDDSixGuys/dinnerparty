@@ -37,10 +37,29 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [alarmTimerId, setAlarmTimerId] = useState<string | null>(null);
 
-  const audioRef = useRef(new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"));
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const alarmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beepCountRef = useRef(0);
+
+  const playTone = useCallback(() => {
+    try {
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {
+      // audio not available
+    }
+  }, []);
 
   const stopAlarmSound = useCallback(() => {
     if (audioIntervalRef.current) {
@@ -51,27 +70,24 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(alarmTimeoutRef.current);
       alarmTimeoutRef.current = null;
     }
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
   }, []);
 
   const playAlarm = useCallback(() => {
     beepCountRef.current = 0;
-    const playBeep = () => {
+    const doBeep = () => {
       const pos = beepCountRef.current % 4;
       if (pos < 3) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+        playTone();
       }
       beepCountRef.current += 1;
     };
-    playBeep();
-    audioIntervalRef.current = setInterval(playBeep, 200);
+    doBeep();
+    audioIntervalRef.current = setInterval(doBeep, 200);
     alarmTimeoutRef.current = setTimeout(() => {
       stopAlarmSound();
       setAlarmTimerId(null);
     }, 60000);
-  }, [stopAlarmSound]);
+  }, [playTone, stopAlarmSound]);
 
   const dismissAlarm = useCallback(() => {
     stopAlarmSound();
@@ -110,6 +126,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [timers, alarmTimerId, playAlarm]);
 
   const startTimer = useCallback((id: string, label: string, minutes: number) => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext();
+    }
     setTimers((prev) => {
       const existing = prev.find((t) => t.id === id);
       if (existing) {

@@ -7,7 +7,8 @@ const vfs = (pdfFonts as unknown as { pdfMake: { vfs: Record<string, string> } }
   ? (pdfFonts as unknown as { pdfMake: { vfs: Record<string, string> } }).pdfMake.vfs
   : (pdfFonts as unknown as { vfs: Record<string, string> }).vfs;
 
-(pdfMake as any).vfs = vfs; // Internal pdfMake requirement
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(pdfMake as any).vfs = vfs;
 
 interface PdfIngredient {
   name: string;

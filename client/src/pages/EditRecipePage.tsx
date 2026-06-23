@@ -117,8 +117,7 @@ export default function EditRecipePage() {
         );
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("FETCH ERROR:", err);
+      .catch(() => {
         setError("Failed to load recipe");
         setLoading(false);
       });

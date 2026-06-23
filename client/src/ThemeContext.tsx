@@ -19,6 +19,7 @@ export interface ColorScheme {
   buttonText: string;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const presets: Record<string, ColorScheme> = {
   default: {
     name: "Default",
@@ -582,6 +583,7 @@ const ThemeContext = createContext<ThemeContextType>({
   setFontSize: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   return useContext(ThemeContext);
 }

@@ -14,7 +14,7 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
-app.use(morgan("dev"));
+app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "20mb" }));
 app.use(cookieParser());
 

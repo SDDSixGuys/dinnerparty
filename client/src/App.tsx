@@ -41,9 +41,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((data) => {
         if (data) setUser(data.user);
       })
-      .catch((err) => {
-        console.error("Auth check failed: ", err);
-      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -94,8 +92,7 @@ function HomePage() {
 
       setUser(data.user);
       navigate("/dashboard");
-    } catch (error) {
-      console.error("Login/Register Error: ", error);
+    } catch {
       setError("Could not connect to server");
     }
   };

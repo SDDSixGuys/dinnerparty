@@ -208,7 +208,7 @@ export default function RecipeDetailPage() {
           className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-sm"
           style={{ color: theme.textMuted }}
         >
-          {recipe.totalTimeMinutes > 0 && (
+          {(recipe.totalTimeMinutes ?? 0) > 0 && (
             <span>
               <strong>Total Time:</strong> {recipe.totalTimeMinutes} mins
             </span>
@@ -312,7 +312,7 @@ export default function RecipeDetailPage() {
                         {s.text}
                       </p>
 
-                      {s.timerMinutes > 0 && (
+                      {s.timerMinutes != null && s.timerMinutes > 0 && (
                         <StepTimer
                           timerId={`${id}-step-${s.stepNumber}`}
                           label={`Step ${s.stepNumber} — ${recipe.title}`}
@@ -365,7 +365,7 @@ export default function RecipeDetailPage() {
             style={{ color: theme.text, borderColor: showFolderMenu ? theme.accent : theme.border }}
           >
             {(recipe.folderIds?.length || 0) > 0
-              ? `Folders (${recipe.folderIds.length})`
+              ? `Folders (${recipe.folderIds?.length})`
               : "Add to Folder"}
           </button>
           {showFolderMenu && (

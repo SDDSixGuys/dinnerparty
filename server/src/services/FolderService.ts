@@ -27,7 +27,7 @@ export class FolderService {
   }
 
   async create(data: Record<string, unknown>, userId: string) {
-    if (!data.name?.trim()) {
+    if (!(data.name as string)?.trim()) {
       throw new ValidationError("Folder name is required");
     }
 
@@ -35,7 +35,7 @@ export class FolderService {
     let depth = 0;
 
     if (data.parentId) {
-      const parent = await this.folderRepository.findOne(data.parentId, userId);
+      const parent = await this.folderRepository.findOne(data.parentId as string, userId);
       if (!parent) {
         throw new NotFoundError("Parent folder not found");
       }
