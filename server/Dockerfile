@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY server/package*.json ./server/
 
 # Install dependencies (workspace-aware)
-RUN npm install
+RUN npm ci
 
 # Copy source
 COPY . .

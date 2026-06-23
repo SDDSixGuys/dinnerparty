@@ -6,7 +6,7 @@ export default function ProfilePage() {
   const { theme } = useTheme();
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h1 className="text-2xl font-semibold mb-1" style={{ color: theme.text }}>
         Profile information
       </h1>

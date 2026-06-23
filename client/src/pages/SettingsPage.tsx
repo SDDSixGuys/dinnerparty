@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const activeIndex = fontSizes.findIndex((f) => f.value === fontSize);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h1 className="text-2xl font-semibold mb-1" style={{ color: theme.text }}>
         Settings
       </h1>
@@ -28,9 +28,9 @@ export default function SettingsPage() {
         </h2>
 
         <div
-          className="relative flex p-1 rounded-lg select-none"
+          className="relative flex p-1 rounded-lg select-none w-full"
           style={{
-            width: "450px",
+            maxWidth: "450px",
             height: "40px",
             background: theme.border,
           }}

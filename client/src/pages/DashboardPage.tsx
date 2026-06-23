@@ -13,7 +13,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     listRecipes()
       .then((data) => {
         if (cancelled) return;
@@ -34,7 +33,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h1 className="text-2xl font-semibold mb-1" style={{ color: theme.text }}>
         Dashboard
       </h1>
